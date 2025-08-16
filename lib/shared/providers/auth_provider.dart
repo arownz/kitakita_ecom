@@ -77,6 +77,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       ).select('id').eq('user_id', user.id).maybeSingle();
 
       if (existing == null) {
+        // Try to get data from user metadata (set during registration)
         final meta = user.userMetadata ?? <String, dynamic>{};
         final profileData = {
           'user_id': user.id,
@@ -89,13 +90,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
           'is_verified': false,
         };
 
+        _logger.i('Creating profile with data: $profileData');
         final inserted = await SupabaseService.from(
           'user_profiles',
-        ).insert(profileData).select('id').single();
-        _logger.i('Ensured profile created: $inserted');
+        ).insert(profileData).select('*').single();
+        _logger.i('Profile created successfully: $inserted');
       }
     } catch (e) {
-      _logger.w('ensureUserProfile skipped/failed: $e');
+      _logger.w('ensureUserProfile failed: $e');
+      // Don't throw - let the app continue, profile can be completed later
     }
   }
 

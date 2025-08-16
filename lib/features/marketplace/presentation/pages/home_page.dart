@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+
 import '../../../../shared/constants/app_colors.dart';
 import '../../../../shared/constants/app_text_styles.dart';
 import '../../../../shared/constants/app_sizes.dart';
@@ -60,8 +60,8 @@ class _HomePageState extends ConsumerState<HomePage> {
           Positioned.fill(
             child: Opacity(
               opacity: 0.1,
-              child: SvgPicture.asset(
-                'assets/images/campus_background.svg',
+              child: Image.asset(
+                'assets/images/campusbackground.png',
                 fit: BoxFit.cover,
               ),
             ),
@@ -184,7 +184,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                     Icons.notifications_outlined,
                     color: AppColors.white,
                   ),
-                  onPressed: () => _showNotificationsBottomSheet(context),
+                  onPressed: () => context.push(AppRoutes.notifications),
                 ),
 
                 // Profile icon
@@ -353,7 +353,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             // Already on home
             break;
           case 1:
-            _showSearchBottomSheet(context);
+            context.push(AppRoutes.search);
             break;
           case 2:
             context.push(AppRoutes.chatList);
@@ -442,52 +442,6 @@ class _HomePageState extends ConsumerState<HomePage> {
     final currentFilters = ref.read(productsProvider).filters;
     final newFilters = currentFilters.copyWith(categoryId: _selectedCategoryId);
     ref.read(productsProvider.notifier).applyFilters(newFilters);
-  }
-
-  void _showNotificationsBottomSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppSizes.radiusL),
-        ),
-      ),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.all(AppSizes.paddingL),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text('Notifications', style: AppTextStyles.h3),
-            SizedBox(height: AppSizes.spaceM),
-            Text('No notifications yet.'),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showSearchBottomSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppSizes.radiusL),
-        ),
-      ),
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          left: AppSizes.paddingL,
-          right: AppSizes.paddingL,
-          bottom: MediaQuery.of(ctx).viewInsets.bottom + AppSizes.paddingL,
-          top: AppSizes.paddingL,
-        ),
-        child: const SearchBarWidget(),
-      ),
-    );
   }
 
   void _showFavoritesBottomSheet(BuildContext context) {

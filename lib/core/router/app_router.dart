@@ -8,6 +8,8 @@ import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/marketplace/presentation/pages/home_page.dart';
 import '../../features/marketplace/presentation/pages/product_detail_page.dart';
 import '../../features/marketplace/presentation/pages/add_product_page.dart';
+import '../../features/marketplace/presentation/pages/search_page.dart';
+import '../../features/notifications/presentation/pages/notifications_page.dart';
 import '../../features/chat/presentation/pages/chat_list_page.dart';
 import '../../features/chat/presentation/pages/chat_detail_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
@@ -21,6 +23,8 @@ class AppRoutes {
   static const String home = '/home';
   static const String productDetail = '/product/:id';
   static const String addProduct = '/add-product';
+  static const String search = '/search';
+  static const String notifications = '/notifications';
   static const String chatList = '/chat';
   static const String chatDetail = '/chat/:id';
   static const String profile = '/profile';
@@ -113,6 +117,16 @@ class AppRouter {
           path: AppRoutes.addProduct,
           name: 'addProduct',
           builder: (context, state) => const AddProductPage(),
+        ),
+        GoRoute(
+          path: AppRoutes.search,
+          name: 'search',
+          builder: (context, state) => const SearchPage(),
+        ),
+        GoRoute(
+          path: AppRoutes.notifications,
+          name: 'notifications',
+          builder: (context, state) => const NotificationsPage(),
         ),
         GoRoute(
           path: AppRoutes.chatList,

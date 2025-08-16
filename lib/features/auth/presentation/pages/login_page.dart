@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+
 import '../../../../shared/constants/app_colors.dart';
 import '../../../../shared/constants/app_text_styles.dart';
 import '../../../../shared/utils/responsive_utils.dart';
@@ -198,7 +198,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           ),
           child: Padding(
             padding: const EdgeInsets.all(20),
-            child: SvgPicture.asset(
+            child: Image.asset(
               'assets/images/kitakita_logo.png',
               fit: BoxFit.contain,
             ),

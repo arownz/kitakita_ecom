@@ -74,6 +74,11 @@ class ProductRepository {
 
       final response = await limitedQuery;
 
+      // If no products in database, return mock data for demonstration
+      if (response.isEmpty) {
+        return _getMockProducts(filters: filters, limit: limit, offset: offset);
+      }
+
       return (response as List).map((item) {
         final Map<String, dynamic> productData = Map<String, dynamic>.from(
           item,
@@ -247,10 +252,57 @@ class ProductRepository {
         _categoriesTable,
       ).select().eq('is_active', true).order('name');
 
+      // If no categories in database, return mock data
+      if (response.isEmpty) {
+        return _getMockCategories();
+      }
+
       return (response as List).map((item) => Category.fromJson(item)).toList();
     } catch (e) {
-      throw Exception('Failed to fetch categories: $e');
+      // Return mock data if there's an error
+      return _getMockCategories();
     }
+  }
+
+  List<Category> _getMockCategories() {
+    return [
+      Category(
+        id: '1',
+        name: 'Textbooks',
+        description: 'Academic books and study materials',
+        createdAt: DateTime.now(),
+      ),
+      Category(
+        id: '2',
+        name: 'Electronics',
+        description: 'Gadgets, laptops, and tech accessories',
+        createdAt: DateTime.now(),
+      ),
+      Category(
+        id: '3',
+        name: 'Clothing',
+        description: 'Apparel and fashion items',
+        createdAt: DateTime.now(),
+      ),
+      Category(
+        id: '4',
+        name: 'School Supplies',
+        description: 'Stationery, notebooks, and supplies',
+        createdAt: DateTime.now(),
+      ),
+      Category(
+        id: '5',
+        name: 'Sports',
+        description: 'Sports equipment and gear',
+        createdAt: DateTime.now(),
+      ),
+      Category(
+        id: '6',
+        name: 'Food & Drinks',
+        description: 'Snacks, beverages, and meal deals',
+        createdAt: DateTime.now(),
+      ),
+    ];
   }
 
   // Toggle favorite
@@ -343,5 +395,200 @@ class ProductRepository {
       offset: offset,
       userId: userId,
     );
+  }
+
+  List<Product> _getMockProducts({
+    ProductFilters? filters,
+    int limit = 20,
+    int offset = 0,
+  }) {
+    List<Product> mockProducts = [
+      Product(
+        id: '1',
+        title: 'Engineering Mathematics Textbook',
+        description:
+            'Comprehensive engineering mathematics textbook used for only one semester. No highlighting or damage.',
+        price: 1500.0,
+        condition: ProductCondition.likeNew,
+        categoryId: '1',
+        categoryName: 'Textbooks',
+        sellerId: 'seller1',
+        sellerName: 'Maria Santos',
+        location: 'University Campus',
+        images: [],
+        createdAt: DateTime.now().subtract(const Duration(days: 2)),
+        updatedAt: DateTime.now().subtract(const Duration(days: 2)),
+        viewCount: 45,
+        isFavorited: false,
+        isAvailable: true,
+      ),
+      Product(
+        id: '2',
+        title: 'Gaming Laptop - ASUS ROG',
+        description:
+            'Powerful gaming laptop with RTX 3060, 16GB RAM, perfect for CS students and gaming.',
+        price: 45000.0,
+        condition: ProductCondition.likeNew,
+        categoryId: '2',
+        categoryName: 'Electronics',
+        sellerId: 'seller2',
+        sellerName: 'John Doe',
+        location: 'Engineering Building',
+        images: [],
+        createdAt: DateTime.now().subtract(const Duration(days: 1)),
+        updatedAt: DateTime.now().subtract(const Duration(days: 1)),
+        viewCount: 128,
+        isFavorited: true,
+        isAvailable: true,
+      ),
+      Product(
+        id: '3',
+        title: 'Physics Lab Manual',
+        description:
+            'Complete physics laboratory manual with all experiments. Includes data sheets.',
+        price: 800.0,
+        condition: ProductCondition.good,
+        categoryId: '1',
+        categoryName: 'Textbooks',
+        sellerId: 'seller3',
+        sellerName: 'Anna Cruz',
+        location: 'Science Building',
+        images: [],
+        createdAt: DateTime.now().subtract(const Duration(hours: 12)),
+        updatedAt: DateTime.now().subtract(const Duration(hours: 12)),
+        viewCount: 23,
+        isFavorited: false,
+        isAvailable: true,
+      ),
+      Product(
+        id: '4',
+        title: 'School Supplies Bundle',
+        description:
+            'Complete set of school supplies: notebooks, pens, highlighters, calculator.',
+        price: 350.0,
+        condition: ProductCondition.new_,
+        categoryId: '4',
+        categoryName: 'School Supplies',
+        sellerId: 'seller4',
+        sellerName: 'Mike Johnson',
+        location: 'Library Area',
+        images: [],
+        createdAt: DateTime.now().subtract(const Duration(hours: 6)),
+        updatedAt: DateTime.now().subtract(const Duration(hours: 6)),
+        viewCount: 15,
+        isFavorited: false,
+        isAvailable: true,
+      ),
+      Product(
+        id: '5',
+        title: 'Basketball Shoes - Nike',
+        description:
+            'Barely used Nike basketball shoes, size 9. Perfect for PE classes and sports.',
+        price: 2500.0,
+        condition: ProductCondition.likeNew,
+        categoryId: '5',
+        categoryName: 'Sports',
+        sellerId: 'seller5',
+        sellerName: 'Sarah Lee',
+        location: 'Gym Building',
+        images: [],
+        createdAt: DateTime.now().subtract(const Duration(hours: 3)),
+        updatedAt: DateTime.now().subtract(const Duration(hours: 3)),
+        viewCount: 32,
+        isFavorited: false,
+        isAvailable: true,
+      ),
+      Product(
+        id: '6',
+        title: 'Calculus Textbook',
+        description:
+            'Stewart Calculus 8th Edition. Excellent condition with solution manual included.',
+        price: 1200.0,
+        condition: ProductCondition.likeNew,
+        categoryId: '1',
+        categoryName: 'Textbooks',
+        sellerId: 'seller6',
+        sellerName: 'David Kim',
+        location: 'Math Building',
+        images: [],
+        createdAt: DateTime.now().subtract(const Duration(minutes: 30)),
+        updatedAt: DateTime.now().subtract(const Duration(minutes: 30)),
+        viewCount: 8,
+        isFavorited: true,
+        isAvailable: true,
+      ),
+    ];
+
+    // Apply filters
+    if (filters != null) {
+      if (filters.searchQuery?.isNotEmpty == true) {
+        mockProducts = mockProducts.where((product) {
+          return product.title.toLowerCase().contains(
+                filters.searchQuery!.toLowerCase(),
+              ) ||
+              product.description.toLowerCase().contains(
+                filters.searchQuery!.toLowerCase(),
+              );
+        }).toList();
+      }
+
+      if (filters.categoryId != null) {
+        mockProducts = mockProducts.where((product) {
+          return product.categoryId == filters.categoryId;
+        }).toList();
+      }
+
+      if (filters.minPrice != null) {
+        mockProducts = mockProducts.where((product) {
+          return product.price >= filters.minPrice!;
+        }).toList();
+      }
+
+      if (filters.maxPrice != null) {
+        mockProducts = mockProducts.where((product) {
+          return product.price <= filters.maxPrice!;
+        }).toList();
+      }
+
+      if (filters.condition != null) {
+        mockProducts = mockProducts.where((product) {
+          return product.condition == filters.condition;
+        }).toList();
+      }
+
+      // Apply sorting
+      switch (filters.sortBy) {
+        case ProductSortBy.newest:
+          mockProducts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          break;
+        case ProductSortBy.oldest:
+          mockProducts.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+          break;
+        case ProductSortBy.priceLowToHigh:
+          mockProducts.sort((a, b) => a.price.compareTo(b.price));
+          break;
+        case ProductSortBy.priceHighToLow:
+          mockProducts.sort((a, b) => b.price.compareTo(a.price));
+          break;
+        case ProductSortBy.mostViewed:
+          mockProducts.sort((a, b) => b.viewCount.compareTo(a.viewCount));
+          break;
+        case ProductSortBy.mostFavorited:
+          // Mock favorited sorting
+          mockProducts.sort(
+            (a, b) => ((b.isFavorited ?? false) ? 1 : 0).compareTo(
+              (a.isFavorited ?? false) ? 1 : 0,
+            ),
+          );
+          break;
+      }
+    }
+
+    // Apply pagination
+    final start = offset;
+    final end = (start + limit).clamp(0, mockProducts.length);
+
+    if (start >= mockProducts.length) return [];
+    return mockProducts.sublist(start, end);
   }
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+
 import '../../../../shared/constants/app_colors.dart';
 import '../../../../shared/constants/app_text_styles.dart';
 import '../../../../shared/utils/responsive_utils.dart';
@@ -120,7 +120,7 @@ class LandingPage extends StatelessWidget {
             ),
             child: Padding(
               padding: const EdgeInsets.all(20),
-              child: SvgPicture.asset(
+              child: Image.asset(
                 'assets/images/kitakita_logo.png',
                 fit: BoxFit.contain,
               ),
@@ -188,27 +188,51 @@ class LandingPage extends StatelessWidget {
 
           const SizedBox(height: 40),
 
-          // Action buttons
-          Row(
-            children: [
-              Expanded(
-                child: _buildActionButton(
-                  context: context,
-                  text: 'Get Started',
-                  isPrimary: true,
-                  onTap: () => context.go(AppRoutes.register),
-                ),
-              ),
-              const SizedBox(width: 20),
-              Expanded(
-                child: _buildActionButton(
-                  context: context,
-                  text: 'Sign In',
-                  isPrimary: false,
-                  onTap: () => context.go(AppRoutes.login),
-                ),
-              ),
-            ],
+          // Action buttons (responsive)
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isNarrow = constraints.maxWidth < 480;
+              if (isNarrow) {
+                return Column(
+                  children: [
+                    _buildActionButton(
+                      context: context,
+                      text: 'Get Started',
+                      isPrimary: true,
+                      onTap: () => context.go(AppRoutes.register),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildActionButton(
+                      context: context,
+                      text: 'Sign In',
+                      isPrimary: false,
+                      onTap: () => context.go(AppRoutes.login),
+                    ),
+                  ],
+                );
+              }
+              return Row(
+                children: [
+                  Expanded(
+                    child: _buildActionButton(
+                      context: context,
+                      text: 'Get Started',
+                      isPrimary: true,
+                      onTap: () => context.go(AppRoutes.register),
+                    ),
+                  ),
+                  const SizedBox(width: 20),
+                  Expanded(
+                    child: _buildActionButton(
+                      context: context,
+                      text: 'Sign In',
+                      isPrimary: false,
+                      onTap: () => context.go(AppRoutes.login),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -328,7 +352,7 @@ class LandingPage extends StatelessWidget {
     required Color color,
   }) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
@@ -336,33 +360,42 @@ class LandingPage extends StatelessWidget {
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: color,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, color: Colors.white, size: 24),
+            child: Icon(icon, color: Colors.white, size: 20),
           ),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: AppTextStyles.bodyMedium.copyWith(
-              fontWeight: FontWeight.w700,
-              color: color,
-              fontSize: 14,
+          const SizedBox(height: 8),
+          Flexible(
+            child: Text(
+              title,
+              style: AppTextStyles.bodyMedium.copyWith(
+                fontWeight: FontWeight.w700,
+                color: color,
+                fontSize: 12,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 4),
-          Text(
-            description,
-            style: AppTextStyles.bodySmall.copyWith(
-              color: color.withValues(alpha: 0.7),
-              fontSize: 12,
+          const SizedBox(height: 2),
+          Flexible(
+            child: Text(
+              description,
+              style: AppTextStyles.bodySmall.copyWith(
+                color: color.withValues(alpha: 0.7),
+                fontSize: 10,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
-            textAlign: TextAlign.center,
           ),
         ],
       ),
