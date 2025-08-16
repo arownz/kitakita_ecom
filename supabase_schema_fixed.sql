@@ -27,12 +27,23 @@ CREATE POLICY "Users can view own profile" ON user_profiles
 CREATE POLICY "Users can update own profile" ON user_profiles
     FOR UPDATE USING (auth.uid() = user_id);
 
+CREATE POLICY "Users can insert own profile" ON user_profiles
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Admin policies - use a separate approach to avoid recursion
 CREATE POLICY "Admins can view all profiles" ON user_profiles
-    FOR ALL USING (
-        EXISTS (
-            SELECT 1 FROM user_profiles 
-            WHERE user_id = auth.uid() AND role = 'admin'
-        )
+    FOR SELECT USING (
+        (SELECT role FROM user_profiles WHERE user_id = auth.uid()) = 'admin'
+    );
+
+CREATE POLICY "Admins can update all profiles" ON user_profiles
+    FOR UPDATE USING (
+        (SELECT role FROM user_profiles WHERE user_id = auth.uid()) = 'admin'
+    );
+
+CREATE POLICY "Admins can delete profiles" ON user_profiles
+    FOR DELETE USING (
+        (SELECT role FROM user_profiles WHERE user_id = auth.uid()) = 'admin'
     );
 
 -- Product Categories Table
@@ -93,10 +104,7 @@ CREATE POLICY "Sellers can manage own products" ON products
 
 CREATE POLICY "Admins can manage all products" ON products
     FOR ALL USING (
-        EXISTS (
-            SELECT 1 FROM user_profiles 
-            WHERE user_id = auth.uid() AND role = 'admin'
-        )
+        (SELECT role FROM user_profiles WHERE user_id = auth.uid()) = 'admin'
     );
 
 -- Product Images Table (for better image management)
@@ -238,10 +246,7 @@ CREATE POLICY "Users can view own reports" ON reports
 
 CREATE POLICY "Admins can manage all reports" ON reports
     FOR ALL USING (
-        EXISTS (
-            SELECT 1 FROM user_profiles 
-            WHERE user_id = auth.uid() AND role = 'admin'
-        )
+        (SELECT role FROM user_profiles WHERE user_id = auth.uid()) = 'admin'
     );
 
 CREATE POLICY "Users can view own notifications" ON notifications

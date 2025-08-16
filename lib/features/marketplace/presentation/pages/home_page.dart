@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../shared/constants/app_colors.dart';
 import '../../../../shared/constants/app_text_styles.dart';
 import '../../../../shared/constants/app_sizes.dart';
@@ -55,21 +56,13 @@ class _HomePageState extends ConsumerState<HomePage> {
           // Background
           Container(color: AppColors.gray),
 
-          // Background image with opacity (similar to Figma design)
-          Positioned(
-            left: -200,
-            top: 0,
+          // Background with campus theme
+          Positioned.fill(
             child: Opacity(
-              opacity: 0.25,
-              child: Container(
-                width: ResponsiveUtils.getScreenWidth(context) + 400,
-                height: ResponsiveUtils.getScreenHeight(context),
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/banner-nu-dasma.png'),
-                    fit: BoxFit.cover,
-                  ),
-                ),
+              opacity: 0.1,
+              child: SvgPicture.asset(
+                'assets/images/campus_background.svg',
+                fit: BoxFit.cover,
               ),
             ),
           ),

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../shared/constants/app_colors.dart';
 import '../../../../shared/constants/app_text_styles.dart';
-import '../../../../shared/constants/app_sizes.dart';
 import '../../../../shared/utils/responsive_utils.dart';
 import '../../../../shared/providers/auth_provider.dart';
 import '../../../../core/router/app_router.dart';
@@ -63,87 +63,179 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     final authState = ref.watch(authProvider);
 
     return Scaffold(
-      body: Stack(
-        children: [
-          // Background
-          Container(
-            decoration: const BoxDecoration(color: AppColors.backgroundColor),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              AppColors.primaryBlue,
+              Color(0xFF1E3A8A),
+              Color(0xFF0F172A),
+            ],
           ),
+        ),
+        child: Stack(
+          children: [
+            // Background elements
+            _buildBackgroundElements(),
 
-          // Background image with opacity
-          Positioned(
-            left: -200,
-            top: 0,
-            child: Opacity(
-              opacity: 0.25,
-              child: Container(
-                width: ResponsiveUtils.getScreenWidth(context) + 400,
-                height: ResponsiveUtils.getScreenHeight(context),
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/banner-nu-dasma.png'),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // Main content
-          SafeArea(
-            child: Center(
+            // Main content
+            SafeArea(
               child: SingleChildScrollView(
                 child: Padding(
                   padding: ResponsiveUtils.getScreenPadding(context),
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Logo section
-                      _buildLogoSection(context),
+                      const SizedBox(height: 40),
 
-                      const SizedBox(height: AppSizes.spaceXL),
+                      // Header with back button
+                      _buildHeader(context),
+
+                      const SizedBox(height: 50),
+
+                      // Logo and welcome section
+                      _buildWelcomeSection(context),
+
+                      const SizedBox(height: 40),
 
                       // Register form
                       _buildRegisterForm(context, authState),
 
-                      const SizedBox(height: AppSizes.spaceL),
+                      const SizedBox(height: 30),
 
                       // Login link
                       _buildLoginLink(context),
+
+                      const SizedBox(height: 40),
                     ],
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildLogoSection(BuildContext context) {
+  Widget _buildBackgroundElements() {
+    return Stack(
+      children: [
+        // Floating shapes
+        Positioned(
+          top: -80,
+          right: -80,
+          child: Container(
+            width: 250,
+            height: 250,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.primaryYellow.withValues(alpha: 0.1),
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: -40,
+          left: -40,
+          child: Container(
+            width: 180,
+            height: 180,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white.withValues(alpha: 0.05),
+            ),
+          ),
+        ),
+        // Grid pattern
+        Positioned.fill(
+          child: Opacity(
+            opacity: 0.03,
+            child: CustomPaint(painter: GridPainter()),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+          ),
+          child: IconButton(
+            onPressed: () => context.go(AppRoutes.landing),
+            icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+            style: IconButton.styleFrom(foregroundColor: Colors.white),
+          ),
+        ),
+        const SizedBox(width: 20),
+        Expanded(
+          child: Text(
+            'Create Your Account',
+            style: AppTextStyles.h2.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWelcomeSection(BuildContext context) {
     return Column(
       children: [
-        // Logo image placeholder
+        // Logo
         Container(
-          width: 131,
-          height: 147,
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('assets/images/kitakita-logo.png'),
+          width: 100,
+          height: 100,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(25),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 30,
+                offset: const Offset(0, 15),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: SvgPicture.asset(
+              'assets/images/kitakita_logo.png',
               fit: BoxFit.contain,
             ),
           ),
         ),
 
-        const SizedBox(height: AppSizes.spaceM),
+        const SizedBox(height: 24),
 
-        // KitaKita title
+        // Welcome text
         Text(
-          'KitaKita',
+          'Join KitaKita',
           style: AppTextStyles.h1.copyWith(
-            fontSize: ResponsiveUtils.getFontSize(context, 40),
+            fontSize: ResponsiveUtils.getFontSize(context, 36),
+            fontWeight: FontWeight.w800,
+            color: Colors.white,
+            letterSpacing: -1,
           ),
+        ),
+
+        const SizedBox(height: 12),
+
+        Text(
+          'Connect with fellow students and trade safely',
+          style: AppTextStyles.bodyMedium.copyWith(
+            color: Colors.white.withValues(alpha: 0.8),
+            fontSize: ResponsiveUtils.getFontSize(context, 16),
+          ),
+          textAlign: TextAlign.center,
         ),
       ],
     );
@@ -152,19 +244,19 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   Widget _buildRegisterForm(BuildContext context, AuthState authState) {
     final maxWidth = ResponsiveUtils.isMobile(context)
         ? double.infinity
-        : 400.0;
+        : 500.0;
 
     return Container(
       constraints: BoxConstraints(maxWidth: maxWidth),
-      padding: const EdgeInsets.all(AppSizes.paddingXL),
+      padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: AppColors.darkBlue.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(AppSizes.radiusM),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadowColor,
-            blurRadius: 10,
-            offset: const Offset(0, 0),
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 40,
+            offset: const Offset(0, 20),
           ),
         ],
       ),
@@ -175,9 +267,10 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
           children: [
             // Student ID field
             _buildInputField(
-              label: 'Student No.:',
+              label: 'Student ID',
               controller: _studentIdController,
               hintText: 'Ex. 2022-110105',
+              icon: Icons.badge,
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter your student ID';
@@ -186,16 +279,17 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               },
             ),
 
-            const SizedBox(height: AppSizes.spaceM),
+            const SizedBox(height: 20),
 
             // Name fields row
             Row(
               children: [
                 Expanded(
                   child: _buildInputField(
-                    label: 'First Name:',
+                    label: 'First Name',
                     controller: _firstNameController,
                     hintText: 'Juan',
+                    icon: Icons.person_outline,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your first name';
@@ -204,12 +298,13 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     },
                   ),
                 ),
-                const SizedBox(width: AppSizes.spaceM),
+                const SizedBox(width: 16),
                 Expanded(
                   child: _buildInputField(
-                    label: 'Last Name:',
+                    label: 'Last Name',
                     controller: _lastNameController,
                     hintText: 'Dela Cruz',
+                    icon: Icons.person_outline,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your last name';
@@ -221,13 +316,14 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               ],
             ),
 
-            const SizedBox(height: AppSizes.spaceM),
+            const SizedBox(height: 20),
 
             // Email field
             _buildInputField(
-              label: 'Email Address:',
+              label: 'Email Address',
               controller: _emailController,
-              hintText: 'your.email@example.com',
+              hintText: 'your.email@university.edu',
+              icon: Icons.email_outlined,
               keyboardType: TextInputType.emailAddress,
               validator: (value) {
                 if (value == null || value.isEmpty) {
@@ -242,13 +338,14 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               },
             ),
 
-            const SizedBox(height: AppSizes.spaceM),
+            const SizedBox(height: 20),
 
             // Phone number field
             _buildInputField(
-              label: 'Phone Number:',
+              label: 'Phone Number',
               controller: _phoneController,
               hintText: 'Ex. 09299990508',
+              icon: Icons.phone_outlined,
               keyboardType: TextInputType.phone,
               validator: (value) {
                 if (value == null || value.isEmpty) {
@@ -258,18 +355,19 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               },
             ),
 
-            const SizedBox(height: AppSizes.spaceM),
+            const SizedBox(height: 20),
 
             // Password field
             _buildInputField(
-              label: 'Password:',
+              label: 'Password',
               controller: _passwordController,
-              hintText: 'Password',
+              hintText: 'Create a strong password',
+              icon: Icons.lock_outlined,
               obscureText: _obscurePassword,
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                  color: AppColors.borderGray,
+                  color: AppColors.primaryBlue,
                 ),
                 onPressed: () {
                   setState(() {
@@ -288,20 +386,21 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               },
             ),
 
-            const SizedBox(height: AppSizes.spaceM),
+            const SizedBox(height: 20),
 
             // Confirm password field
             _buildInputField(
-              label: 'Confirm Password:',
+              label: 'Confirm Password',
               controller: _confirmPasswordController,
-              hintText: 'Confirm Password',
+              hintText: 'Confirm your password',
+              icon: Icons.lock_outlined,
               obscureText: _obscureConfirmPassword,
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscureConfirmPassword
                       ? Icons.visibility
                       : Icons.visibility_off,
-                  color: AppColors.borderGray,
+                  color: AppColors.primaryBlue,
                 ),
                 onPressed: () {
                   setState(() {
@@ -320,38 +419,67 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               },
             ),
 
-            const SizedBox(height: AppSizes.spaceXL),
+            const SizedBox(height: 30),
 
             // Error message
             if (authState.error != null) ...[
               Container(
-                padding: const EdgeInsets.all(AppSizes.paddingM),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: AppColors.error.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppSizes.radiusS),
-                  border: Border.all(color: AppColors.error),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppColors.error.withValues(alpha: 0.3),
+                  ),
                 ),
-                child: Text(
-                  authState.error!,
-                  style: const TextStyle(color: AppColors.error),
-                  textAlign: TextAlign.center,
+                child: Row(
+                  children: [
+                    Icon(Icons.error_outline, color: AppColors.error, size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        authState.error!,
+                        style: TextStyle(color: AppColors.error),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: AppSizes.spaceM),
+              const SizedBox(height: 20),
             ],
 
             // Register button
             SizedBox(
-              height: AppSizes.buttonHeightM,
+              height: 56,
               child: ElevatedButton(
                 onPressed: authState.isLoading ? null : _handleRegister,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryBlue,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 0,
+                  shadowColor: Colors.transparent,
+                ),
                 child: authState.isLoading
                     ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        height: 24,
+                        width: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                        ),
                       )
-                    : const Text('REGISTER'),
+                    : Text(
+                        'Create Account',
+                        style: AppTextStyles.buttonMedium.copyWith(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
               ),
             ),
           ],
@@ -364,6 +492,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     required String label,
     required TextEditingController controller,
     required String hintText,
+    required IconData icon,
     TextInputType? keyboardType,
     bool obscureText = false,
     Widget? suffixIcon,
@@ -372,17 +501,63 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTextStyles.inputLabel),
-        const SizedBox(height: AppSizes.spaceS),
+        Text(
+          label,
+          style: AppTextStyles.bodyMedium.copyWith(
+            fontWeight: FontWeight.w600,
+            color: AppColors.primaryBlue,
+            fontSize: 16,
+          ),
+        ),
+        const SizedBox(height: 8),
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
           obscureText: obscureText,
-          style: AppTextStyles.inputText,
+          style: AppTextStyles.bodyMedium.copyWith(
+            color: AppColors.primaryBlue,
+            fontSize: 16,
+          ),
           decoration: InputDecoration(
             hintText: hintText,
-            hintStyle: AppTextStyles.inputHint,
+            hintStyle: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textGray.withValues(alpha: 0.6),
+            ),
+            prefixIcon: Icon(icon, color: AppColors.primaryBlue),
             suffixIcon: suffixIcon,
+            filled: true,
+            fillColor: AppColors.lightGray.withValues(alpha: 0.3),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: AppColors.borderGray.withValues(alpha: 0.3),
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(
+                color: AppColors.primaryBlue,
+                width: 2,
+              ),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: AppColors.error.withValues(alpha: 0.5),
+              ),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppColors.error, width: 2),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 20,
+            ),
           ),
           validator: validator,
         ),
@@ -391,22 +566,30 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   }
 
   Widget _buildLoginLink(BuildContext context) {
-    return RichText(
-      textAlign: TextAlign.center,
-      text: TextSpan(
-        style: AppTextStyles.bodySmall.copyWith(color: AppColors.primaryYellow),
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const TextSpan(text: "Already have an account ? "),
-          WidgetSpan(
-            child: GestureDetector(
-              onTap: () => context.go(AppRoutes.login),
-              child: const Text(
-                'Login',
-                style: TextStyle(
-                  color: AppColors.primaryYellow,
-                  fontWeight: FontWeight.bold,
-                  decoration: TextDecoration.underline,
-                ),
+          Text(
+            'Already have an account? ',
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: Colors.white.withValues(alpha: 0.8),
+            ),
+          ),
+          GestureDetector(
+            onTap: () => context.go(AppRoutes.login),
+            child: Text(
+              'Sign In',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.primaryYellow,
+                fontWeight: FontWeight.w700,
+                decoration: TextDecoration.underline,
               ),
             ),
           ),
@@ -414,4 +597,29 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       ),
     );
   }
+}
+
+// Custom painter for grid pattern
+class GridPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.05)
+      ..strokeWidth = 1;
+
+    final spacing = 40.0;
+
+    // Vertical lines
+    for (double x = 0; x < size.width; x += spacing) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    }
+
+    // Horizontal lines
+    for (double y = 0; y < size.height; y += spacing) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

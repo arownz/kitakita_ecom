@@ -2,12 +2,17 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseService {
   static const String supabaseUrl = 'https://agqauzxqiruoestoyimr.supabase.co';
-  static const String supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFncWF1enhxaXJ1b2VzdG95aW1yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxNjk4ODMsImV4cCI6MjA3MDc0NTg4M30.9R1f_m_rghSv8SgZmQzgQ1bJmbl4G89N0U38YAw7zJ4';
+  static const String supabaseAnonKey =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFncWF1enhxaXJ1b2VzdG95aW1yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxNjk4ODMsImV4cCI6MjA3MDc0NTg4M30.9R1f_m_rghSv8SgZmQzgQ1bJmbl4G89N0U38YAw7zJ4';
 
   static SupabaseClient get client => Supabase.instance.client;
 
   static Future<void> initialize() async {
-    await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
+    await Supabase.initialize(
+      url: supabaseUrl,
+      anonKey: supabaseAnonKey,
+      headers: {'apikey': supabaseAnonKey},
+    );
   }
 
   // Auth related methods

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../shared/constants/app_colors.dart';
 import '../../../../shared/constants/app_text_styles.dart';
-import '../../../../shared/constants/app_sizes.dart';
 import '../../../../shared/utils/responsive_utils.dart';
 import '../../../../core/router/app_router.dart';
 
@@ -12,365 +12,578 @@ class LandingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          // Background
-          Container(
-            decoration: const BoxDecoration(color: AppColors.backgroundColor),
-          ),
-
-          // Background image with opacity
-          Positioned(
-            left: -200,
-            top: 50,
-            child: Opacity(
-              opacity: 0.25,
-              child: Container(
-                width: ResponsiveUtils.getScreenWidth(context) + 400,
-                height: ResponsiveUtils.getScreenHeight(context) * 0.9,
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/banner-nu-dasma.png'),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // Main content
-          SafeArea(
-            child: Column(
-              children: [
-                // Header
-                _buildHeader(context),
-
-                // Logo and content
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Padding(
-                      padding: ResponsiveUtils.getScreenPadding(context),
-                      child: Column(
-                        children: [
-                          const SizedBox(height: AppSizes.spaceXXL),
-
-                          // Logo section
-                          _buildLogoSection(context),
-
-                          const SizedBox(height: AppSizes.spaceXXL),
-
-                          // Welcome section
-                          _buildWelcomeSection(context),
-
-                          const SizedBox(height: AppSizes.spaceXL),
-
-                          // Description section
-                          _buildDescriptionSection(context),
-
-                          const SizedBox(height: AppSizes.spaceXXL),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeader(BuildContext context) {
-    return Container(
-      height: AppSizes.appBarHeight,
-      width: double.infinity,
-      color: AppColors.primaryBlue,
-      child: Stack(
-        children: [
-          // Yellow accent bar at bottom
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: 7,
-              decoration: BoxDecoration(
-                color: AppColors.primaryYellow,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.shadowColor,
-                    blurRadius: 8,
-                    offset: const Offset(0, 0),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // Header content
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingM),
-            child: Row(
-              children: [
-                // Menu icon
-                Icon(
-                  Icons.menu,
-                  color: AppColors.white,
-                  size: ResponsiveUtils.getIconSize(context, AppSizes.iconL),
-                ),
-
-                const SizedBox(width: AppSizes.spaceM),
-
-                // App title
-                Text(
-                  'KitaKita',
-                  style: AppTextStyles.navTitle.copyWith(
-                    fontSize: ResponsiveUtils.getFontSize(context, 20),
-                  ),
-                ),
-
-                const Spacer(),
-
-                // Auth buttons
-                if (ResponsiveUtils.isTablet(context) ||
-                    ResponsiveUtils.isDesktop(context))
-                  _buildAuthButtons(context)
-                else
-                  _buildMobileAuthButtons(context),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAuthButtons(BuildContext context) {
-    return Row(
-      children: [
-        // Login button
-        Container(
-          height: 35,
-          decoration: BoxDecoration(
-            color: AppColors.secondaryBlue,
-            borderRadius: BorderRadius.circular(AppSizes.radiusS),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.shadowColor,
-                blurRadius: 8,
-                offset: const Offset(0, 0),
-              ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              AppColors.primaryBlue,
+              AppColors.primaryBlue,
+              Color(0xFF1E3A8A),
             ],
           ),
-          child: TextButton(
-            onPressed: () => context.go(AppRoutes.login),
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-            ),
-            child: const Text('Log in', style: TextStyle(fontSize: 10)),
-          ),
         ),
+        child: Stack(
+          children: [
+            // Animated background elements
+            _buildBackgroundElements(),
 
-        const SizedBox(width: AppSizes.spaceS),
+            // Main content
+            SafeArea(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    // Hero section
+                    _buildHeroSection(context),
 
-        // Register button
-        Container(
-          height: 35,
-          decoration: BoxDecoration(
-            color: AppColors.primaryYellow,
-            borderRadius: BorderRadius.circular(AppSizes.radiusS),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.shadowColor,
-                blurRadius: 8,
-                offset: const Offset(0, 0),
-              ),
-            ],
-          ),
-          child: TextButton(
-            onPressed: () => context.go(AppRoutes.register),
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.black,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-            ),
-            child: const Text('Create Account', style: TextStyle(fontSize: 10)),
-          ),
-        ),
-      ],
-    );
-  }
+                    // Features section
+                    _buildFeaturesSection(context),
 
-  Widget _buildMobileAuthButtons(BuildContext context) {
-    return Row(
-      children: [
-        // Compact login button
-        GestureDetector(
-          onTap: () => context.go(AppRoutes.login),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppColors.secondaryBlue,
-              borderRadius: BorderRadius.circular(AppSizes.radiusS),
-            ),
-            child: const Text(
-              'Login',
-              style: TextStyle(color: AppColors.white, fontSize: 10),
-            ),
-          ),
-        ),
+                    // How it works section
+                    _buildHowItWorksSection(context),
 
-        const SizedBox(width: AppSizes.spaceS),
+                    // CTA section
+                    _buildCTASection(context),
 
-        // Compact register button
-        GestureDetector(
-          onTap: () => context.go(AppRoutes.register),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppColors.primaryYellow,
-              borderRadius: BorderRadius.circular(AppSizes.radiusS),
-            ),
-            child: const Text(
-              'Register',
-              style: TextStyle(color: AppColors.black, fontSize: 10),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLogoSection(BuildContext context) {
-    return Column(
-      children: [
-        // Logo image placeholder
-        Container(
-          width: 129,
-          height: 148,
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('assets/images/kitakita-logo.png'),
-              fit: BoxFit.contain,
-            ),
-          ),
-        ),
-
-        const SizedBox(height: AppSizes.spaceM),
-
-        // KitaKita title
-        Text(
-          'KitaKita',
-          style: AppTextStyles.h1.copyWith(
-            fontSize: ResponsiveUtils.getFontSize(context, 40),
-          ),
-        ),
-
-        const SizedBox(height: AppSizes.spaceS),
-
-        // NU subtitle
-        Text(
-          'NU',
-          style: AppTextStyles.h1.copyWith(
-            fontSize: ResponsiveUtils.getFontSize(context, 40),
-          ),
-        ),
-
-        const SizedBox(height: AppSizes.spaceS),
-
-        // Tagline
-        Text(
-          'Student-Only e-Commerce',
-          style: AppTextStyles.bodyLarge.copyWith(
-            fontSize: ResponsiveUtils.getFontSize(context, 17),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildWelcomeSection(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSizes.paddingL),
-      decoration: BoxDecoration(
-        color: AppColors.primaryYellow,
-        borderRadius: BorderRadius.circular(AppSizes.radiusM),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadowColor,
-            blurRadius: 8,
-            offset: const Offset(0, 0),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          RichText(
-            text: TextSpan(
-              style: AppTextStyles.h2.copyWith(
-                fontSize: ResponsiveUtils.getFontSize(context, 32),
-              ),
-              children: const [
-                TextSpan(text: 'Welcome to '),
-                TextSpan(
-                  text: 'KitaKita',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                    const SizedBox(height: 40),
+                  ],
                 ),
-                TextSpan(text: '!'),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: AppSizes.spaceS),
-
-          Text(
-            '  - Your campus marketplace',
-            style: AppTextStyles.h3.copyWith(
-              fontSize: ResponsiveUtils.getFontSize(context, 22),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDescriptionSection(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSizes.paddingL),
-      decoration: BoxDecoration(
-        color: AppColors.primaryYellow,
-        borderRadius: BorderRadius.circular(AppSizes.radiusM),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadowColor,
-            blurRadius: 8,
-            offset: const Offset(0, 0),
-          ),
-        ],
-      ),
-      child: RichText(
-        textAlign: TextAlign.right,
-        text: TextSpan(
-          style: AppTextStyles.bodyMedium.copyWith(
-            fontSize: ResponsiveUtils.getFontSize(context, 15),
-            color: AppColors.primaryBlue,
-          ),
-          children: const [
-            TextSpan(
-              text: 'KitaKita',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            TextSpan(
-              text:
-                  ' is a C2C(Customer-to-Customer) Business Platform to foster an exclusive environment for Trading. A working ecosystem for NUD Students to freely find what they need or want that other students may have available for sale.',
+              ),
             ),
           ],
         ),
       ),
     );
   }
+
+  Widget _buildBackgroundElements() {
+    return Stack(
+      children: [
+        // Floating circles
+        Positioned(
+          top: 100,
+          right: -50,
+          child: Container(
+            width: 200,
+            height: 200,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.primaryYellow.withValues(alpha: 0.1),
+            ),
+          ),
+        ),
+        Positioned(
+          top: 300,
+          left: -30,
+          child: Container(
+            width: 150,
+            height: 150,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white.withValues(alpha: 0.05),
+            ),
+          ),
+        ),
+        // Grid pattern overlay
+        Positioned.fill(
+          child: Opacity(
+            opacity: 0.03,
+            child: CustomPaint(painter: GridPainter()),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHeroSection(BuildContext context) {
+    return Container(
+      padding: ResponsiveUtils.getScreenPadding(context),
+      child: Column(
+        children: [
+          const SizedBox(height: 60),
+
+          // Logo and title
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 30,
+                  offset: const Offset(0, 15),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: SvgPicture.asset(
+                'assets/images/kitakita_logo.png',
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 30),
+
+          // Main title
+          Text(
+            'KitaKita',
+            style: AppTextStyles.h1.copyWith(
+              fontSize: ResponsiveUtils.getFontSize(context, 56),
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+              letterSpacing: -2,
+              shadows: [
+                Shadow(
+                  color: Colors.black.withValues(alpha: 0.3),
+                  offset: const Offset(0, 4),
+                  blurRadius: 8,
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Subtitle
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppColors.primaryYellow,
+              borderRadius: BorderRadius.circular(25),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primaryYellow.withValues(alpha: 0.4),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Text(
+              'Student Marketplace',
+              style: AppTextStyles.h3.copyWith(
+                fontSize: ResponsiveUtils.getFontSize(context, 18),
+                fontWeight: FontWeight.w700,
+                color: AppColors.primaryBlue,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 30),
+
+          // Description
+          Text(
+            'The ultimate peer-to-peer marketplace for students.\nBuy, sell, and trade with your campus community.',
+            style: AppTextStyles.bodyLarge.copyWith(
+              fontSize: ResponsiveUtils.getFontSize(context, 18),
+              color: Colors.white.withValues(alpha: 0.9),
+              height: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+
+          const SizedBox(height: 40),
+
+          // Action buttons
+          Row(
+            children: [
+              Expanded(
+                child: _buildActionButton(
+                  context: context,
+                  text: 'Get Started',
+                  isPrimary: true,
+                  onTap: () => context.go(AppRoutes.register),
+                ),
+              ),
+              const SizedBox(width: 20),
+              Expanded(
+                child: _buildActionButton(
+                  context: context,
+                  text: 'Sign In',
+                  isPrimary: false,
+                  onTap: () => context.go(AppRoutes.login),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required BuildContext context,
+    required String text,
+    required bool isPrimary,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 56,
+        decoration: BoxDecoration(
+          color: isPrimary ? AppColors.primaryYellow : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          border: isPrimary ? null : Border.all(color: Colors.white, width: 2),
+          boxShadow: isPrimary
+              ? [
+                  BoxShadow(
+                    color: AppColors.primaryYellow.withValues(alpha: 0.4),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ]
+              : null,
+        ),
+        child: Center(
+          child: Text(
+            text,
+            style: AppTextStyles.buttonMedium.copyWith(
+              fontSize: ResponsiveUtils.getFontSize(context, 16),
+              fontWeight: FontWeight.w700,
+              color: isPrimary ? AppColors.primaryBlue : Colors.white,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeaturesSection(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(30),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 30,
+            offset: const Offset(0, 15),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Text(
+            'Why Students Love KitaKita',
+            style: AppTextStyles.h2.copyWith(
+              fontSize: ResponsiveUtils.getFontSize(context, 28),
+              fontWeight: FontWeight.w800,
+              color: AppColors.primaryBlue,
+            ),
+            textAlign: TextAlign.center,
+          ),
+
+          const SizedBox(height: 30),
+
+          // Features grid
+          GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: ResponsiveUtils.isMobile(context) ? 2 : 4,
+            crossAxisSpacing: 20,
+            mainAxisSpacing: 20,
+            children: [
+              _buildFeatureCard(
+                icon: Icons.school,
+                title: 'Student Only',
+                description: 'Exclusive community',
+                color: AppColors.primaryBlue,
+              ),
+              _buildFeatureCard(
+                icon: Icons.swap_horiz,
+                title: 'Buy & Sell',
+                description: 'Easy trading',
+                color: AppColors.primaryYellow,
+              ),
+              _buildFeatureCard(
+                icon: Icons.location_on,
+                title: 'Campus Based',
+                description: 'Local meetups',
+                color: AppColors.success,
+              ),
+              _buildFeatureCard(
+                icon: Icons.shield,
+                title: 'Safe Trading',
+                description: 'Verified users',
+                color: AppColors.error,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeatureCard({
+    required IconData icon,
+    required String title,
+    required String description,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: Colors.white, size: 24),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            title,
+            style: AppTextStyles.bodyMedium.copyWith(
+              fontWeight: FontWeight.w700,
+              color: color,
+              fontSize: 14,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            description,
+            style: AppTextStyles.bodySmall.copyWith(
+              color: color.withValues(alpha: 0.7),
+              fontSize: 12,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHowItWorksSection(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+      padding: const EdgeInsets.all(30),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primaryYellow.withValues(alpha: 0.1),
+            AppColors.primaryBlue.withValues(alpha: 0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: AppColors.primaryYellow.withValues(alpha: 0.2),
+        ),
+      ),
+      child: Column(
+        children: [
+          Text(
+            'How It Works',
+            style: AppTextStyles.h2.copyWith(
+              fontSize: ResponsiveUtils.getFontSize(context, 28),
+              fontWeight: FontWeight.w800,
+              color: AppColors.primaryBlue,
+            ),
+            textAlign: TextAlign.center,
+          ),
+
+          const SizedBox(height: 30),
+
+          // Steps
+          ...[
+            {
+              'step': '1',
+              'title': 'Create Account',
+              'desc': 'Sign up with your student email',
+            },
+            {
+              'step': '2',
+              'title': 'List Items',
+              'desc': 'Post what you want to sell',
+            },
+            {
+              'step': '3',
+              'title': 'Connect',
+              'desc': 'Chat and meet with buyers/sellers',
+            },
+            {
+              'step': '4',
+              'title': 'Trade',
+              'desc': 'Complete your transaction safely',
+            },
+          ].map(
+            (step) => _buildStepItem(
+              step: step['step'] as String,
+              title: step['title'] as String,
+              description: step['desc'] as String,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStepItem({
+    required String step,
+    required String title,
+    required String description,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppColors.primaryYellow,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Center(
+              child: Text(
+                step,
+                style: AppTextStyles.buttonMedium.copyWith(
+                  color: AppColors.primaryBlue,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primaryBlue,
+                  ),
+                ),
+                Text(
+                  description,
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textGray,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCTASection(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(30),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primaryBlue,
+            AppColors.primaryBlue.withValues(alpha: 0.8),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primaryBlue.withValues(alpha: 0.3),
+            blurRadius: 30,
+            offset: const Offset(0, 15),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Text(
+            'Ready to Start Trading?',
+            style: AppTextStyles.h2.copyWith(
+              fontSize: ResponsiveUtils.getFontSize(context, 24),
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+            ),
+            textAlign: TextAlign.center,
+          ),
+
+          const SizedBox(height: 16),
+
+          Text(
+            'Join thousands of students already trading on KitaKita',
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: Colors.white.withValues(alpha: 0.9),
+              fontSize: 16,
+            ),
+            textAlign: TextAlign.center,
+          ),
+
+          const SizedBox(height: 30),
+
+          SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: ElevatedButton(
+              onPressed: () => context.go(AppRoutes.register),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryYellow,
+                foregroundColor: AppColors.primaryBlue,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                elevation: 0,
+                shadowColor: Colors.transparent,
+              ),
+              child: Text(
+                'Join KitaKita Now',
+                style: AppTextStyles.buttonMedium.copyWith(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Custom painter for grid pattern
+class GridPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.1)
+      ..strokeWidth = 1;
+
+    final spacing = 30.0;
+
+    // Vertical lines
+    for (double x = 0; x < size.width; x += spacing) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    }
+
+    // Horizontal lines
+    for (double y = 0; y < size.height; y += spacing) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

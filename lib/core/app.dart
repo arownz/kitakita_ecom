@@ -12,7 +12,7 @@ class KitaKitaApp extends ConsumerWidget {
     final router = ref.watch(routerProvider);
 
     return MaterialApp.router(
-      title: 'KitaKita - Student-Only e-Commerce',
+      title: 'KitaKita',
       debugShowCheckedModeBanner: false,
       routerConfig: router,
       theme: ThemeData(
