@@ -7,6 +7,8 @@ import '../../../../shared/constants/app_sizes.dart';
 import '../../../../shared/providers/auth_provider.dart';
 import '../../../../shared/utils/responsive_utils.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../shared/services/supabase_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
@@ -179,6 +181,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             label: 'First Name',
             icon: Icons.person,
             enabled: _isEditing,
+            // The text color will be set to black in _buildTextField, not here.
           ),
           const SizedBox(height: AppSizes.spaceM),
 
@@ -298,10 +301,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           title: 'My Products',
           subtitle: 'Manage your listings',
           onTap: () {
-            // TODO: Navigate to user products page
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('My Products - Coming Soon')),
-            );
+            context.push(AppRoutes.myProducts);
           },
         ),
 
@@ -313,10 +313,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           title: 'My Favorites',
           subtitle: 'Saved products',
           onTap: () {
-            // TODO: Navigate to favorites page
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('My Favorites - Coming Soon')),
-            );
+            context.push(AppRoutes.favorites);
           },
         ),
 
@@ -328,10 +325,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           title: 'Settings',
           subtitle: 'App preferences',
           onTap: () {
-            // TODO: Navigate to settings page
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Settings - Coming Soon')),
-            );
+            context.push(AppRoutes.settings);
           },
         ),
 
@@ -396,18 +390,56 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     );
   }
 
-  void _saveProfile() {
+  void _saveProfile() async {
     if (_formKey.currentState?.validate() ?? false) {
-      // TODO: Implement profile update with Supabase
-      setState(() {
-        _isEditing = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profile updated successfully'),
-          backgroundColor: AppColors.success,
-        ),
-      );
+      try {
+        // Persist to Supabase user_profiles
+        final user = ref.read(currentUserProvider);
+        if (user != null) {
+          await SupabaseService.from('user_profiles')
+              .update({
+                'first_name': _firstNameController.text.trim(),
+                'last_name': _lastNameController.text.trim(),
+                'student_id': _studentIdController.text.trim(),
+                'phone_number': _phoneController.text.trim(),
+              })
+              .eq('user_id', user.id);
+
+          // Update user metadata in Supabase Auth
+          await SupabaseService.client.auth.updateUser(
+            UserAttributes(
+              data: {
+                'first_name': _firstNameController.text.trim(),
+                'last_name': _lastNameController.text.trim(),
+                'student_id': _studentIdController.text.trim(),
+                'phone_number': _phoneController.text.trim(),
+              },
+            ),
+          );
+        }
+
+        setState(() {
+          _isEditing = false;
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Profile updated successfully'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to update profile: $e'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
     }
   }
 

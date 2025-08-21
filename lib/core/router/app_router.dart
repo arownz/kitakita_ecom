@@ -13,6 +13,9 @@ import '../../features/notifications/presentation/pages/notifications_page.dart'
 import '../../features/chat/presentation/pages/chat_list_page.dart';
 import '../../features/chat/presentation/pages/chat_detail_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
+import '../../features/profile/presentation/pages/my_products_page.dart';
+import '../../features/profile/presentation/pages/favorites_page.dart';
+import '../../features/profile/presentation/pages/settings_page.dart';
 import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
 
 // Route names
@@ -29,6 +32,9 @@ class AppRoutes {
   static const String chatDetail = '/chat/:id';
   static const String profile = '/profile';
   static const String adminDashboard = '/admin';
+  static const String myProducts = '/my-products';
+  static const String favorites = '/favorites';
+  static const String settings = '/settings';
 }
 
 class AppRouter {
@@ -145,6 +151,21 @@ class AppRouter {
           path: AppRoutes.profile,
           name: 'profile',
           builder: (context, state) => const ProfilePage(),
+        ),
+        GoRoute(
+          path: AppRoutes.myProducts,
+          name: 'myProducts',
+          builder: (context, state) => const MyProductsPage(),
+        ),
+        GoRoute(
+          path: AppRoutes.favorites,
+          name: 'favorites',
+          builder: (context, state) => const FavoritesPage(),
+        ),
+        GoRoute(
+          path: AppRoutes.settings,
+          name: 'settings',
+          builder: (context, state) => const SettingsPage(),
         ),
 
         // Admin Routes

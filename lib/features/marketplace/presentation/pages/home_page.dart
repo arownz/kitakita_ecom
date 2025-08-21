@@ -50,6 +50,8 @@ class _HomePageState extends ConsumerState<HomePage> {
     final categoriesAsync = ref.watch(categoriesProvider);
     final currentUser = ref.watch(currentUserProvider);
 
+    final isDesktop = ResponsiveUtils.isDesktop(context);
+
     return Scaffold(
       body: Stack(
         children: [
@@ -69,41 +71,23 @@ class _HomePageState extends ConsumerState<HomePage> {
 
           // Main content
           SafeArea(
-            child: Column(
-              children: [
-                // Header
-                _buildHeader(context),
-
-                // Main content
-                Expanded(
-                  child: CustomScrollView(
-                    controller: _scrollController,
-                    slivers: [
-                      // Search bar
-                      SliverToBoxAdapter(child: _buildSearchSection(context)),
-
-                      // Categories
-                      SliverToBoxAdapter(
-                        child: _buildCategoriesSection(categoriesAsync),
+            child: isDesktop
+                ? Row(
+                    children: [
+                      _buildDesktopNavRail(context),
+                      Expanded(
+                        child: _buildMainScroll(categoriesAsync, productsState),
                       ),
-
-                      // Products grid
-                      _buildProductsGrid(productsState),
-
-                      // Loading indicator
-                      if (productsState.isLoading &&
-                          productsState.products.isNotEmpty)
-                        const SliverToBoxAdapter(
-                          child: Padding(
-                            padding: EdgeInsets.all(AppSizes.paddingL),
-                            child: Center(child: CircularProgressIndicator()),
-                          ),
-                        ),
+                    ],
+                  )
+                : Column(
+                    children: [
+                      _buildHeader(context),
+                      Expanded(
+                        child: _buildMainScroll(categoriesAsync, productsState),
+                      ),
                     ],
                   ),
-                ),
-              ],
-            ),
           ),
         ],
       ),
@@ -119,7 +103,70 @@ class _HomePageState extends ConsumerState<HomePage> {
           : null,
 
       // Bottom navigation (placeholder for now)
-      bottomNavigationBar: _buildBottomNavigation(context),
+      bottomNavigationBar: isDesktop ? null : _buildBottomNavigation(context),
+    );
+  }
+
+  Widget _buildMainScroll(
+    AsyncValue<List<Category>> categoriesAsync,
+    ProductsState productsState,
+  ) {
+    return CustomScrollView(
+      controller: _scrollController,
+      slivers: [
+        SliverToBoxAdapter(child: _buildSearchSection(context)),
+        SliverToBoxAdapter(child: _buildCategoriesSection(categoriesAsync)),
+        _buildProductsGrid(productsState),
+        if (productsState.isLoading && productsState.products.isNotEmpty)
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.all(AppSizes.paddingL),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildDesktopNavRail(BuildContext context) {
+    return NavigationRail(
+      selectedIndex: 0,
+      backgroundColor: AppColors.white,
+      extended: true,
+      destinations: const [
+        NavigationRailDestination(icon: Icon(Icons.home), label: Text('Home')),
+        NavigationRailDestination(
+          icon: Icon(Icons.search),
+          label: Text('Search'),
+        ),
+        NavigationRailDestination(icon: Icon(Icons.chat), label: Text('Chat')),
+        NavigationRailDestination(
+          icon: Icon(Icons.favorite),
+          label: Text('Favorites'),
+        ),
+        NavigationRailDestination(
+          icon: Icon(Icons.person),
+          label: Text('Profile'),
+        ),
+      ],
+      onDestinationSelected: (index) {
+        switch (index) {
+          case 0:
+            break;
+          case 1:
+            context.push(AppRoutes.search);
+            break;
+          case 2:
+            context.push(AppRoutes.chatList);
+            break;
+          case 3:
+            _showFavoritesBottomSheet(context);
+            break;
+          case 4:
+            context.push(AppRoutes.profile);
+            break;
+        }
+      },
     );
   }
 

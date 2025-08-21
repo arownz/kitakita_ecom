@@ -21,30 +21,105 @@ class SearchPage extends ConsumerStatefulWidget {
 class _SearchPageState extends ConsumerState<SearchPage> {
   final _searchController = TextEditingController();
   String? _selectedCategoryId;
-  // TODO: Implement price filtering
-  // double _minPrice = 0;
-  // double _maxPrice = 10000;
-  // String _sortBy = 'newest';
+  // Basic filter state (wired to provider searchWithFilters)
+  double _minPrice = 0;
+  double _maxPrice = 10000;
+  String _sortBy = 'newest';
   bool _showFilters = false;
 
-  // TODO: Implement sorting options when advanced search is ready
-  // final List<String> _sortOptions = [
-  //   'newest',
-  //   'oldest',
-  //   'price_low',
-  //   'price_high',
-  //   'name_asc',
-  //   'name_desc',
-  // ];
+  // Demo book items for testing
+  final List<Map<String, dynamic>> _demoBooks = [
+    {
+      'title': 'Engineering Mathematics Textbook',
+      'description':
+          'Comprehensive engineering mathematics textbook used for only one semester. No highlighting or damage.',
+      'price': 1500.0,
+      'condition': 'likeNew',
+      'category': 'Textbooks',
+      'location': 'University Campus',
+      'seller': 'Maria Santos',
+      'views': 45,
+    },
+    {
+      'title': 'Calculus: Early Transcendentals',
+      'description':
+          'James Stewart calculus textbook, 8th edition. Excellent condition with minimal wear.',
+      'price': 1200.0,
+      'condition': 'excellent',
+      'category': 'Textbooks',
+      'location': 'Engineering Building',
+      'seller': 'Juan Dela Cruz',
+      'views': 32,
+    },
+    {
+      'title': 'Physics for Scientists and Engineers',
+      'description':
+          'Serway physics textbook with practice problems. Good condition, some notes in margins.',
+      'price': 800.0,
+      'condition': 'good',
+      'category': 'Textbooks',
+      'location': 'Science Complex',
+      'seller': 'Ana Rodriguez',
+      'views': 28,
+    },
+    {
+      'title': 'Organic Chemistry Lab Manual',
+      'description':
+          'Lab manual for organic chemistry experiments. Like new, never used.',
+      'price': 600.0,
+      'condition': 'likeNew',
+      'category': 'Lab Manuals',
+      'location': 'Chemistry Department',
+      'seller': 'Carlos Mendoza',
+      'views': 15,
+    },
+    {
+      'title': 'Computer Science Fundamentals',
+      'description':
+          'Introduction to computer science concepts. Excellent condition, no markings.',
+      'price': 900.0,
+      'condition': 'excellent',
+      'category': 'Textbooks',
+      'location': 'Computer Science Building',
+      'seller': 'Lisa Chen',
+      'views': 38,
+    },
+    {
+      'title': 'Business Management Principles',
+      'description':
+          'Core business management textbook. Good condition with some highlighting.',
+      'price': 700.0,
+      'condition': 'good',
+      'category': 'Business',
+      'location': 'Business School',
+      'seller': 'Michael Johnson',
+      'views': 22,
+    },
+    {
+      'title': 'Spanish Language Workbook',
+      'description':
+          'Intermediate Spanish practice workbook. Fair condition, some pages completed.',
+      'price': 300.0,
+      'condition': 'fair',
+      'category': 'Language',
+      'location': 'Language Center',
+      'seller': 'Sofia Martinez',
+      'views': 12,
+    },
+    {
+      'title': 'Art History Survey',
+      'description':
+          'Comprehensive art history textbook with color plates. Excellent condition.',
+      'price': 1100.0,
+      'condition': 'excellent',
+      'category': 'Arts',
+      'location': 'Fine Arts Building',
+      'seller': 'David Kim',
+      'views': 19,
+    },
+  ];
 
-  // final Map<String, String> _sortLabels = {
-  //   'newest': 'Newest First',
-  //   'oldest': 'Oldest First',
-  //   'price_low': 'Price: Low to High',
-  //   'price_high': 'Price: High to Low',
-  //   'name_asc': 'Name: A to Z',
-  //   'name_desc': 'Name: Z to A',
-  // };
+  // Sorting options are wired via _sortBy and ProductSortBy mapping in _performSearch
 
   @override
   void dispose() {
@@ -251,90 +326,111 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
           const SizedBox(height: AppSizes.spaceM),
 
-          // TODO: Implement price range filtering
-          // Text(
-          //   'Price Range',
-          //   style: AppTextStyles.bodyMedium.copyWith(
-          //     fontWeight: FontWeight.w600,
-          //   ),
-          // ),
-          // const SizedBox(height: AppSizes.spaceS),
-          // Row(
-          //   children: [
-          //     Expanded(
-          //       child: TextField(
-          //         decoration: const InputDecoration(
-          //           labelText: 'Min Price',
-          //           prefixText: '₱',
-          //           border: OutlineInputBorder(),
-          //           contentPadding: EdgeInsets.symmetric(
-          //             horizontal: 12,
-          //             vertical: 8,
-          //           ),
-          //         ),
-          //         keyboardType: TextInputType.number,
-          //         onChanged: (value) {
-          //           _minPrice = double.tryParse(value) ?? 0;
-          //         },
-          //       ),
-          //     ),
-          //     const SizedBox(height: AppSizes.spaceM),
-          //     Expanded(
-          //       child: TextField(
-          //           labelText: 'Max Price',
-          //           prefixText: '₱',
-          //           border: OutlineInputBorder(),
-          //           contentPadding: EdgeInsets.symmetric(
-          //             horizontal: 12,
-          //             vertical: 8,
-          //           ),
-          //         ),
-          //         keyboardType: TextInputType.number,
-          //         onChanged: (value) {
-          //           _maxPrice = double.tryParse(value) ?? 10000;
-          //         },
-          //       ),
-          //     ),
-          //   ],
-          // ),
+          // Price Range
+          Text(
+            'Price Range',
+            style: AppTextStyles.bodyMedium.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: AppSizes.spaceS),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  decoration: const InputDecoration(
+                    labelText: 'Min Price',
+                    prefixText: '₱',
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                  ),
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    _minPrice = double.tryParse(value) ?? 0;
+                  },
+                ),
+              ),
+              const SizedBox(width: AppSizes.spaceM),
+              Expanded(
+                child: TextField(
+                  decoration: const InputDecoration(
+                    labelText: 'Max Price',
+                    prefixText: '₱',
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                  ),
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    _maxPrice = double.tryParse(value) ?? 10000;
+                  },
+                ),
+              ),
+            ],
+          ),
 
-          // const SizedBox(height: AppSizes.spaceM),
+          const SizedBox(height: AppSizes.spaceM),
 
-          // TODO: Implement sorting
-          // Row(
-          //   children: [
-          //     Text(
-          //       'Sort by:',
-          //       style: AppTextStyles.bodyMedium.copyWith(
-          //         fontWeight: FontWeight.w600,
-          //       ),
-          //     ),
-          //     const SizedBox(width: AppSizes.spaceM),
-          //     Expanded(
-          //       child: DropdownButtonFormField<String>(
-          //         value: _sortBy,
-          //         decoration: const InputDecoration(
-          //           border: OutlineInputBorder(),
-          //           contentPadding: EdgeInsets.symmetric(
-          //             horizontal: 12,
-          //             vertical: 8,
-          //           ),
-          //         ),
-          //         items: _sortOptions.map((option) {
-          //           return DropdownMenuItem(
-          //             child: Text(_sortLabels[option] ?? option),
-          //           );
-          //         }).toList(),
-          //         onChanged: (value) {
-          //           setState(() {
-          //             _sortBy = value!;
-          //           });
-          //           _performSearch();
-          //         },
-          //       ),
-          //     ),
-          //   ],
-          // ),
+          Row(
+            children: [
+              Text(
+                'Sort by:',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(width: AppSizes.spaceM),
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  value: _sortBy,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                  ),
+                  items: const [
+                    DropdownMenuItem(
+                      value: 'newest',
+                      child: Text('Newest First'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'oldest',
+                      child: Text('Oldest First'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'price_low',
+                      child: Text('Price: Low to High'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'price_high',
+                      child: Text('Price: High to Low'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'most_viewed',
+                      child: Text('Most Viewed'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'most_favorited',
+                      child: Text('Most Favorited'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      _sortBy = value ?? 'newest';
+                    });
+                    _performSearch();
+                  },
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: AppSizes.spaceM),
 
           // Apply Filters Button
@@ -422,7 +518,10 @@ class _SearchPageState extends ConsumerState<SearchPage> {
               _searchController.clear();
               setState(() {
                 _selectedCategoryId = null;
-                // TODO: Reset price and sort filters when implemented
+                // Reset price and sort filters
+                _minPrice = 0;
+                _maxPrice = 10000;
+                _sortBy = 'newest';
               });
               _performSearch();
             },
@@ -434,16 +533,150 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   }
 
   void _performSearch() {
-    // TODO: Implement advanced search with filters and sorting
-    ref.read(searchProvider.notifier).search(_searchController.text.trim());
+    final sort = () {
+      switch (_sortBy) {
+        case 'oldest':
+          return ProductSortBy.oldest;
+        case 'price_low':
+          return ProductSortBy.priceLowToHigh;
+        case 'price_high':
+          return ProductSortBy.priceHighToLow;
+        case 'most_viewed':
+          return ProductSortBy.mostViewed;
+        case 'most_favorited':
+          return ProductSortBy.mostFavorited;
+        case 'newest':
+        default:
+          return ProductSortBy.newest;
+      }
+    }();
+
+    final filters = ProductFilters(
+      searchQuery: _searchController.text.trim(),
+      categoryId: _selectedCategoryId,
+      minPrice: _minPrice,
+      maxPrice: _maxPrice,
+      sortBy: sort,
+    );
+
+    // If no search query and no filters, show demo books
+    if (_searchController.text.trim().isEmpty &&
+        _selectedCategoryId == null &&
+        _minPrice == 0 &&
+        _maxPrice == 10000) {
+      _showDemoResults();
+    } else {
+      ref
+          .read(searchProvider.notifier)
+          .searchWithFilters(filters: filters, sortBy: sort);
+    }
+  }
+
+  void _showDemoResults() {
+    // Filter demo books based on current filters
+    List<Map<String, dynamic>> filteredBooks = _demoBooks.where((book) {
+      // Category filter
+      if (_selectedCategoryId != null && _selectedCategoryId!.isNotEmpty) {
+        final category = ref
+            .read(categoriesProvider)
+            .value
+            ?.firstWhere(
+              (cat) => cat.id == _selectedCategoryId,
+              orElse: () => Category(
+                id: '',
+                name: '',
+                description: '',
+                createdAt: DateTime.now(),
+              ),
+            );
+        if (category != null && book['category'] != category.name) {
+          return false;
+        }
+      }
+
+      // Price filter
+      if (book['price'] < _minPrice || book['price'] > _maxPrice) {
+        return false;
+      }
+
+      return true;
+    }).toList();
+
+    // Sort demo books
+    switch (_sortBy) {
+      case 'price_low':
+        filteredBooks.sort(
+          (a, b) => (a['price'] as double).compareTo(b['price'] as double),
+        );
+        break;
+      case 'price_high':
+        filteredBooks.sort(
+          (a, b) => (b['price'] as double).compareTo(a['price'] as double),
+        );
+        break;
+      case 'most_viewed':
+        filteredBooks.sort(
+          (a, b) => (b['views'] as int).compareTo(a['views'] as int),
+        );
+        break;
+      case 'oldest':
+        // Demo books don't have dates, so keep original order
+        break;
+      default: // newest
+        // Keep original order for demo
+        break;
+    }
+
+    // Convert demo books to Product objects for display
+    final demoProducts = filteredBooks
+        .map(
+          (book) => Product(
+            id: 'demo_${book['title'].hashCode}',
+            title: book['title'],
+            description: book['description'],
+            price: book['price'],
+            condition: _getProductCondition(book['condition']),
+            categoryId: 'demo_category',
+            categoryName: book['category'],
+            sellerId: 'demo_seller',
+            sellerName: book['seller'],
+            location: book['location'],
+            images: [],
+            createdAt: DateTime.now().subtract(Duration(days: book['views'])),
+            updatedAt: DateTime.now().subtract(Duration(days: book['views'])),
+            viewCount: book['views'],
+            isFavorited: false,
+            isAvailable: true,
+          ),
+        )
+        .toList();
+
+    // Update the search provider with demo results
+    ref.read(searchProvider.notifier).setResults(demoProducts);
+  }
+
+  ProductCondition _getProductCondition(String condition) {
+    switch (condition) {
+      case 'likeNew':
+        return ProductCondition.likeNew;
+      case 'excellent':
+        return ProductCondition.likeNew;
+      case 'good':
+        return ProductCondition.good;
+      case 'fair':
+        return ProductCondition.fair;
+      case 'poor':
+        return ProductCondition.poor;
+      default:
+        return ProductCondition.good;
+    }
   }
 
   void _debounceSearch() {
     // Simple debounce - in production, use a proper debounce package
     Future.delayed(const Duration(milliseconds: 500), () {
-      if (mounted) {
-        _performSearch();
-      }
+      if (!mounted) return;
+      _performSearch();
     });
   }
 }

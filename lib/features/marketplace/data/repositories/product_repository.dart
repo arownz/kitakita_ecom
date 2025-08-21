@@ -17,7 +17,6 @@ class ProductRepository {
       var query = SupabaseService.from(_productsTable).select('''
             *,
             categories(name),
-            user_profiles!seller_id(first_name, last_name),
             user_favorites!left(user_id)
           ''');
 
@@ -84,12 +83,8 @@ class ProductRepository {
           item,
         );
 
-        // Add seller name
-        final profile = productData['user_profiles'];
-        if (profile != null) {
-          productData['seller_name'] =
-              '${profile['first_name']} ${profile['last_name']}';
-        }
+        // Seller name omitted to avoid user_profiles join under strict RLS
+        productData['seller_name'] = productData['seller_name'] ?? '';
 
         // Add category name
         final category = productData['categories'];
@@ -104,7 +99,6 @@ class ProductRepository {
             favorites?.any((fav) => fav['user_id'] == userId) == true;
 
         // Remove nested objects for clean parsing
-        productData.remove('user_profiles');
         productData.remove('categories');
         productData.remove('user_favorites');
 
@@ -274,30 +268,54 @@ class ProductRepository {
       ),
       Category(
         id: '2',
+        name: 'Lab Manuals',
+        description: 'Laboratory guides and experiment manuals',
+        createdAt: DateTime.now(),
+      ),
+      Category(
+        id: '3',
+        name: 'Business',
+        description: 'Business and management materials',
+        createdAt: DateTime.now(),
+      ),
+      Category(
+        id: '4',
+        name: 'Language',
+        description: 'Language learning materials and workbooks',
+        createdAt: DateTime.now(),
+      ),
+      Category(
+        id: '5',
+        name: 'Arts',
+        description: 'Art history and creative materials',
+        createdAt: DateTime.now(),
+      ),
+      Category(
+        id: '6',
         name: 'Electronics',
         description: 'Gadgets, laptops, and tech accessories',
         createdAt: DateTime.now(),
       ),
       Category(
-        id: '3',
+        id: '7',
         name: 'Clothing',
         description: 'Apparel and fashion items',
         createdAt: DateTime.now(),
       ),
       Category(
-        id: '4',
+        id: '8',
         name: 'School Supplies',
         description: 'Stationery, notebooks, and supplies',
         createdAt: DateTime.now(),
       ),
       Category(
-        id: '5',
+        id: '9',
         name: 'Sports',
         description: 'Sports equipment and gear',
         createdAt: DateTime.now(),
       ),
       Category(
-        id: '6',
+        id: '10',
         name: 'Food & Drinks',
         description: 'Snacks, beverages, and meal deals',
         createdAt: DateTime.now(),

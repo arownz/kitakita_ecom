@@ -4,6 +4,7 @@ import '../../../../shared/constants/app_colors.dart';
 import '../../../../shared/constants/app_text_styles.dart';
 import '../../../../shared/constants/app_sizes.dart';
 import '../../../../shared/utils/responsive_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class NotificationsPage extends ConsumerStatefulWidget {
   const NotificationsPage({super.key});
@@ -13,6 +14,32 @@ class NotificationsPage extends ConsumerStatefulWidget {
 }
 
 class _NotificationsPageState extends ConsumerState<NotificationsPage> {
+  bool _pushEnabled = true;
+  bool _emailEnabled = false;
+  bool _salesEnabled = true;
+  bool _messageEnabled = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _pushEnabled = prefs.getBool('notif_push') ?? true;
+      _emailEnabled = prefs.getBool('notif_email') ?? false;
+      _salesEnabled = prefs.getBool('notif_sales') ?? true;
+      _messageEnabled = prefs.getBool('notif_message') ?? true;
+    });
+  }
+
+  Future<void> _saveSetting(String key, bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(key, value);
+  }
+
   final List<NotificationItem> _notifications = [
     NotificationItem(
       id: '1',
@@ -373,64 +400,40 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
             _buildSettingTile(
               'Push Notifications',
               'Receive notifications on your device',
-              true,
+              _pushEnabled,
               (value) {
-                // TODO: Implement push notification setting with Supabase
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Push notifications ${value ? 'enabled' : 'disabled'}',
-                    ),
-                  ),
-                );
+                setState(() => _pushEnabled = value);
+                _saveSetting('notif_push', value);
               },
             ),
 
             _buildSettingTile(
               'Email Notifications',
               'Receive notifications via email',
-              false,
+              _emailEnabled,
               (value) {
-                // TODO: Implement email notification setting with Supabase
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Email notifications ${value ? 'enabled' : 'disabled'}',
-                    ),
-                  ),
-                );
+                setState(() => _emailEnabled = value);
+                _saveSetting('notif_email', value);
               },
             ),
 
             _buildSettingTile(
               'Sales Notifications',
               'Get notified when your items sell',
-              true,
+              _salesEnabled,
               (value) {
-                // TODO: Implement sales notification setting with Supabase
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Sales notifications ${value ? 'enabled' : 'disabled'}',
-                    ),
-                  ),
-                );
+                setState(() => _salesEnabled = value);
+                _saveSetting('notif_sales', value);
               },
             ),
 
             _buildSettingTile(
               'Message Notifications',
               'Get notified of new messages',
-              true,
+              _messageEnabled,
               (value) {
-                // TODO: Implement message notification setting with Supabase
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Message notifications ${value ? 'enabled' : 'disabled'}',
-                    ),
-                  ),
-                );
+                setState(() => _messageEnabled = value);
+                _saveSetting('notif_message', value);
               },
             ),
 

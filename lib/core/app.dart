@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'router/app_router.dart';
 import '../shared/constants/app_colors.dart';
 import '../shared/constants/app_text_styles.dart';
+import '../shared/providers/theme_provider.dart';
 
 class KitaKitaApp extends ConsumerWidget {
   const KitaKitaApp({super.key});
@@ -10,11 +11,13 @@ class KitaKitaApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    final themeMode = ref.watch(themeControllerProvider);
 
     return MaterialApp.router(
       title: 'KitaKita',
       debugShowCheckedModeBanner: false,
       routerConfig: router,
+      themeMode: themeMode,
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
@@ -152,6 +155,20 @@ class KitaKitaApp extends ConsumerWidget {
             borderRadius: BorderRadius.circular(100),
           ),
         ),
+      ),
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        colorScheme: const ColorScheme.dark(
+          primary: AppColors.primaryYellow,
+          secondary: AppColors.primaryYellow,
+        ),
+        scaffoldBackgroundColor: Colors.black,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.black,
+          foregroundColor: AppColors.white,
+        ),
+        iconTheme: const IconThemeData(color: AppColors.primaryYellow),
+        dividerTheme: const DividerThemeData(color: Colors.white24),
       ),
     );
   }

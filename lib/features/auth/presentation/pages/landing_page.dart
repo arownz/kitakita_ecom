@@ -234,6 +234,8 @@ class LandingPage extends StatelessWidget {
               );
             },
           ),
+
+          const SizedBox(height: 60),
         ],
       ),
     );
@@ -245,31 +247,36 @@ class LandingPage extends StatelessWidget {
     required bool isPrimary,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 56,
-        decoration: BoxDecoration(
-          color: isPrimary ? AppColors.primaryYellow : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
-          border: isPrimary ? null : Border.all(color: Colors.white, width: 2),
-          boxShadow: isPrimary
-              ? [
-                  BoxShadow(
-                    color: AppColors.primaryYellow.withValues(alpha: 0.4),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ]
-              : null,
-        ),
-        child: Center(
-          child: Text(
-            text,
-            style: AppTextStyles.buttonMedium.copyWith(
-              fontSize: ResponsiveUtils.getFontSize(context, 16),
-              fontWeight: FontWeight.w700,
-              color: isPrimary ? AppColors.primaryBlue : Colors.white,
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          height: 56,
+          decoration: BoxDecoration(
+            color: isPrimary ? AppColors.primaryYellow : Colors.transparent,
+            borderRadius: BorderRadius.circular(16),
+            border: isPrimary
+                ? null
+                : Border.all(color: Colors.white, width: 2),
+            boxShadow: isPrimary
+                ? [
+                    BoxShadow(
+                      color: AppColors.primaryYellow.withValues(alpha: 0.4),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Center(
+            child: Text(
+              text,
+              style: AppTextStyles.buttonMedium.copyWith(
+                fontSize: ResponsiveUtils.getFontSize(context, 16),
+                fontWeight: FontWeight.w700,
+                color: isPrimary ? AppColors.primaryBlue : Colors.white,
+              ),
             ),
           ),
         ),
@@ -295,7 +302,7 @@ class LandingPage extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            'Why Students Love KitaKita',
+            'Why Students Need to Use KitaKita',
             style: AppTextStyles.h2.copyWith(
               fontSize: ResponsiveUtils.getFontSize(context, 28),
               fontWeight: FontWeight.w800,
@@ -427,7 +434,7 @@ class LandingPage extends StatelessWidget {
             style: AppTextStyles.h2.copyWith(
               fontSize: ResponsiveUtils.getFontSize(context, 28),
               fontWeight: FontWeight.w800,
-              color: AppColors.primaryBlue,
+              color: AppColors.white,
             ),
             textAlign: TextAlign.center,
           ),
@@ -454,7 +461,7 @@ class LandingPage extends StatelessWidget {
             {
               'step': '4',
               'title': 'Trade',
-              'desc': 'Complete your transaction safely',
+              'desc': 'Complete your transaction',
             },
           ].map(
             (step) => _buildStepItem(
@@ -503,13 +510,13 @@ class LandingPage extends StatelessWidget {
                   title,
                   style: AppTextStyles.bodyMedium.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: AppColors.primaryBlue,
+                    color: AppColors.white,
                   ),
                 ),
                 Text(
                   description,
                   style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.textGray,
+                    color: const Color.fromARGB(174, 255, 255, 255),
                   ),
                 ),
               ],
@@ -559,7 +566,13 @@ class LandingPage extends StatelessWidget {
           Text(
             'Join thousands of students already trading on KitaKita',
             style: AppTextStyles.bodyMedium.copyWith(
-              color: Colors.white.withValues(alpha: 0.9),
+              color: const Color.fromARGB(
+                174,
+                255,
+                255,
+                255,
+              ).withValues(alpha: 0.9),
+
               fontSize: 16,
             ),
             textAlign: TextAlign.center,
@@ -586,6 +599,7 @@ class LandingPage extends StatelessWidget {
                 style: AppTextStyles.buttonMedium.copyWith(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
+                  color: AppColors.primaryBlue,
                 ),
               ),
             ),

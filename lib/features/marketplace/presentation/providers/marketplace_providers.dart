@@ -240,8 +240,34 @@ class SearchNotifier extends StateNotifier<SearchState> {
     }
   }
 
+  Future<void> searchWithFilters({
+    required ProductFilters filters,
+    ProductSortBy sortBy = ProductSortBy.newest,
+  }) async {
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+      query: filters.searchQuery ?? '',
+    );
+    try {
+      final results = await repository.getProducts(
+        filters: filters.copyWith(sortBy: sortBy),
+        limit: 40,
+        offset: 0,
+        userId: userId,
+      );
+      state = state.copyWith(results: results, isLoading: false);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
   void clearSearch() {
     state = const SearchState();
+  }
+
+  void setResults(List<Product> results) {
+    state = state.copyWith(results: results, isLoading: false, error: null);
   }
 }
 

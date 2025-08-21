@@ -230,7 +230,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         const SizedBox(height: 12),
 
         Text(
-          'Connect with fellow students and trade safely',
+          'Connect with fellow students and trade',
           style: AppTextStyles.bodyMedium.copyWith(
             color: Colors.white.withValues(alpha: 0.8),
             fontSize: ResponsiveUtils.getFontSize(context, 16),
