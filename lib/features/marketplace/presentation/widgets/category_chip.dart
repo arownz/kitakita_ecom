@@ -70,7 +70,7 @@ class CategoryChip extends StatelessWidget {
         return Icons.checkroom;
       case 'restaurant':
         return Icons.restaurant;
-      case 'sports_basketball':
+      case 'sports':
         return Icons.sports_basketball;
       case 'home':
         return Icons.home;
