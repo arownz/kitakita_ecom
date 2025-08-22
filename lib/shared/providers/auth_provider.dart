@@ -11,12 +11,14 @@ class AuthState {
   final bool isLoading;
   final String? error;
   final UserRole? userRole;
+  final bool isEmailVerified;
 
   const AuthState({
     this.user,
     this.isLoading = false,
     this.error,
     this.userRole,
+    this.isEmailVerified = false,
   });
 
   AuthState copyWith({
@@ -24,12 +26,14 @@ class AuthState {
     bool? isLoading,
     String? error,
     UserRole? userRole,
+    bool? isEmailVerified,
   }) {
     return AuthState(
       user: user ?? this.user,
       isLoading: isLoading ?? this.isLoading,
       error: error,
       userRole: userRole ?? this.userRole,
+      isEmailVerified: isEmailVerified ?? this.isEmailVerified,
     );
   }
 }
@@ -66,7 +70,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _ensureUserProfile(user);
 
       final userRole = await _getUserRole(user.id);
-      state = state.copyWith(user: user, userRole: userRole);
+      final isVerified = user.emailConfirmedAt != null;
+      state = state.copyWith(
+        user: user,
+        userRole: userRole,
+        isEmailVerified: isVerified,
+      );
     }
   }
 
@@ -88,6 +97,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
           'email': user.email ?? meta['email'] ?? '',
           'role': 'student',
           'is_verified': false,
+          if (meta['profile_image_url'] != null)
+            'profile_image_url': meta['profile_image_url'],
         };
 
         _logger.i('Creating profile with data: $profileData');
@@ -103,7 +114,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   void _clearUser() {
-    state = state.copyWith(user: null, userRole: null);
+    state = state.copyWith(user: null, userRole: null, isEmailVerified: false);
   }
 
   Future<UserRole?> _getUserRole(String userId) async {
@@ -127,6 +138,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String firstName,
     required String lastName,
     required String phoneNumber,
+    String? profileImageUrl,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
 
@@ -140,6 +152,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
           'first_name': firstName,
           'last_name': lastName,
           'phone_number': phoneNumber,
+          if (profileImageUrl != null) 'profile_image_url': profileImageUrl,
           'email': email,
         },
       );
@@ -148,9 +161,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
         final hasSession =
             response.session != null || SupabaseService.currentUser != null;
         try {
-          // Wait a moment for the user to be fully created
-          await Future.delayed(const Duration(milliseconds: 500));
-
           // If we have a session, create the profile now; otherwise it will be
           // auto-created on first sign-in by _ensureUserProfile.
           if (hasSession) {
@@ -163,6 +173,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
               'email': email,
               'role': 'student',
               'is_verified': false,
+              if (profileImageUrl != null) 'profile_image_url': profileImageUrl,
             };
 
             final profileResult = await SupabaseService.from(
@@ -188,7 +199,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
           state = state.copyWith(
             isLoading: false,
-            error: 'Failed to create user profile: ${profileError.toString()}',
+            error: _humanizeAuthError(
+              'Failed to create user profile: ${profileError.toString()}',
+            ),
           );
           return false;
         }
@@ -203,7 +216,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       _logger.e('SignUp error: $e');
       state = state.copyWith(
         isLoading: false,
-        error: 'Registration failed: ${e.toString()}',
+        error: _humanizeAuthError(e.toString()),
       );
       return false;
     }
@@ -229,7 +242,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
         return false;
       }
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(
+        isLoading: false,
+        error: _humanizeAuthError(e.toString()),
+      );
       return false;
     }
   }
@@ -241,7 +257,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
       _clearUser();
       state = state.copyWith(isLoading: false);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(
+        isLoading: false,
+        error: _humanizeAuthError(e.toString()),
+      );
     }
   }
 
@@ -253,13 +272,74 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWith(isLoading: false);
       return true;
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(
+        isLoading: false,
+        error: _humanizeAuthError(e.toString()),
+      );
       return false;
     }
   }
 
+  String _humanizeAuthError(String error) {
+    if (error.toLowerCase().contains('invalid login credentials')) {
+      return 'Invalid email or password. Please check your credentials and try again.';
+    }
+    if (error.toLowerCase().contains('email not confirmed')) {
+      return 'Please verify your email address before signing in.';
+    }
+    if (error.toLowerCase().contains('user not found')) {
+      return 'No account found with this email address.';
+    }
+    if (error.toLowerCase().contains('too many requests')) {
+      return 'Too many attempts. Please wait a moment before trying again.';
+    }
+    if (error.toLowerCase().contains('network')) {
+      return 'Network error. Please check your internet connection.';
+    }
+    if (error.toLowerCase().contains('signup not allowed')) {
+      return 'Account registration is currently unavailable.';
+    }
+    if (error.toLowerCase().contains('email already registered')) {
+      return 'An account with this email already exists. Try signing in instead.';
+    }
+    if (error.toLowerCase().contains('weak password')) {
+      return 'Password is too weak. Please choose a stronger password.';
+    }
+    if (error.toLowerCase().contains('invalid email')) {
+      return 'Please enter a valid email address.';
+    }
+
+    // Default fallback for unknown errors
+    return 'Something went wrong. Please try again later.';
+  }
+
   void clearError() {
     state = state.copyWith(error: null);
+  }
+
+  Future<bool> resendVerificationEmail() async {
+    final user = state.user;
+    if (user?.email == null) return false;
+
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      _logger.i('Resending verification email to: ${user!.email}');
+      await SupabaseService.client.auth.resend(
+        type: OtpType.signup,
+        email: user.email!,
+      );
+      _logger.i('Verification email sent successfully');
+      state = state.copyWith(isLoading: false);
+      return true;
+    } catch (e) {
+      _logger.e('Failed to resend verification email: $e');
+      state = state.copyWith(
+        isLoading: false,
+        error: _humanizeAuthError(e.toString()),
+      );
+      return false;
+    }
   }
 }
 
@@ -287,4 +367,8 @@ final isAdminProvider = Provider<bool>((ref) {
 
 final isStudentProvider = Provider<bool>((ref) {
   return ref.watch(authProvider).userRole == UserRole.student;
+});
+
+final isEmailVerifiedProvider = Provider<bool>((ref) {
+  return ref.watch(authProvider).isEmailVerified;
 });

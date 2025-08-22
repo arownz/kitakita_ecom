@@ -4,6 +4,7 @@ import '../../domain/models/product.dart';
 import '../../../../shared/constants/app_colors.dart';
 import '../../../../shared/constants/app_text_styles.dart';
 import '../../../../shared/constants/app_sizes.dart';
+import 'product_detail_popup.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
@@ -24,7 +25,7 @@ class ProductCard extends StatelessWidget {
     return Card(
       margin: EdgeInsets.zero,
       child: InkWell(
-        onTap: onTap,
+        onTap: onTap ?? () => product.showDetailPopup(context),
         borderRadius: BorderRadius.circular(AppSizes.cardBorderRadius),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

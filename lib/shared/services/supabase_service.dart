@@ -4,6 +4,8 @@ class SupabaseService {
   static const String supabaseUrl = 'https://agqauzxqiruoestoyimr.supabase.co';
   static const String supabaseAnonKey =
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFncWF1enhxaXJ1b2VzdG95aW1yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxNjk4ODMsImV4cCI6MjA3MDc0NTg4M30.9R1f_m_rghSv8SgZmQzgQ1bJmbl4G89N0U38YAw7zJ4';
+      
+      // service_role: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFncWF1enhxaXJ1b2VzdG95aW1yIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NTE2OTg4MywiZXhwIjoyMDcwNzQ1ODgzfQ.V6Yi3KA_iOjd-EjjtZUGivQzCPw_5mZcQAYfok3hrdM
 
   static SupabaseClient get client => Supabase.instance.client;
 

@@ -1,20 +1,22 @@
 import '../../domain/models/product.dart';
 import '../../../../shared/services/supabase_service.dart';
+import 'package:logger/logger.dart';
 
 class ProductRepository {
   static const String _productsTable = 'products';
   static const String _categoriesTable = 'categories';
   static const String _favoritesTable = 'user_favorites';
 
+  final _logger = Logger();
+
   // Get products with filters and pagination
   Future<List<Product>> getProducts({
-    ProductFilters? filters,
-    int limit = 20,
     int offset = 0,
-    String? userId,
+    int limit = 20,
+    ProductFilters? filters,
   }) async {
     try {
-      var query = SupabaseService.from(_productsTable).select('''
+      var query = SupabaseService.from('products').select('''
             *,
             categories(name),
             user_favorites!left(user_id)
@@ -22,95 +24,99 @@ class ProductRepository {
 
       // Apply filters
       if (filters != null) {
-        if (filters.isAvailable != null) {
-          query = query.eq('is_available', filters.isAvailable!);
-        }
-
         if (filters.categoryId != null) {
           query = query.eq('category_id', filters.categoryId!);
         }
-
-        if (filters.searchQuery?.isNotEmpty == true) {
-          query = query.textSearch('title,description', filters.searchQuery!);
-        }
-
         if (filters.minPrice != null) {
           query = query.gte('price', filters.minPrice!);
         }
-
         if (filters.maxPrice != null) {
           query = query.lte('price', filters.maxPrice!);
         }
-
-        if (filters.condition != null) {
-          query = query.eq('condition', filters.condition!.value);
+        if (filters.searchQuery != null && filters.searchQuery!.isNotEmpty) {
+          query = query.or(
+            'title.ilike.%${filters.searchQuery}%,description.ilike.%${filters.searchQuery}%',
+          );
         }
-
-        if (filters.location?.isNotEmpty == true) {
+        if (filters.condition != null) {
+          query = query.eq('condition', filters.condition!.name);
+        }
+        if (filters.location != null && filters.location!.isNotEmpty) {
           query = query.ilike('location', '%${filters.location}%');
         }
+      }
 
-        // Apply sorting
-        switch (filters.sortBy) {
-          case ProductSortBy.newest:
-            break;
-          case ProductSortBy.oldest:
-            break;
-          case ProductSortBy.priceLowToHigh:
-            break;
-          case ProductSortBy.priceHighToLow:
-            break;
-          case ProductSortBy.mostViewed:
-            break;
-          case ProductSortBy.mostFavorited:
-            break;
+      // Apply ordering and pagination
+      final finalQuery = query
+          .eq('is_available', true)
+          .order('created_at', ascending: false)
+          .order('id', ascending: false)
+          .range(offset, offset + limit - 1);
+
+      final response = await finalQuery;
+      final List<Product> products = [];
+
+      for (final row in response) {
+        try {
+          final categoryName =
+              (row['categories'] as Map<String, dynamic>?)?['name'] ??
+              'Unknown';
+          final favorites = row['user_favorites'] as List<dynamic>? ?? [];
+          final isFavorited = favorites.isNotEmpty;
+
+          final product = Product(
+            id: row['id'] ?? '',
+            sellerId: row['seller_id'] ?? '',
+            categoryId: row['category_id'] ?? '',
+            categoryName: categoryName,
+            title: row['title'] ?? '',
+            description: row['description'] ?? '',
+            price: (row['price'] ?? 0).toDouble(),
+            condition: _parseProductCondition(row['condition'] ?? ''),
+            location: row['location'] ?? '',
+            images: List<String>.from(row['images'] ?? []),
+            isAvailable: row['is_available'] ?? true,
+            isFavorited: isFavorited,
+            createdAt:
+                DateTime.tryParse(row['created_at'] ?? '') ?? DateTime.now(),
+            updatedAt:
+                DateTime.tryParse(row['updated_at'] ?? '') ?? DateTime.now(),
+          );
+          products.add(product);
+        } catch (e) {
+          _logger.w('Error parsing product: $e');
+          continue;
         }
       }
 
-      // Apply ordering and range after filtering to avoid type issues
-      final orderedQuery = query.order('created_at', ascending: false);
-      final limitedQuery = orderedQuery.range(offset, offset + limit - 1);
-
-      final response = await limitedQuery;
-
-      // If no products in database, return mock data for demonstration
-      if (response.isEmpty) {
-        return _getMockProducts(filters: filters, limit: limit, offset: offset);
-      }
-
-      return (response as List).map((item) {
-        final Map<String, dynamic> productData = Map<String, dynamic>.from(
-          item,
-        );
-
-        // Seller name omitted to avoid user_profiles join under strict RLS
-        productData['seller_name'] = productData['seller_name'] ?? '';
-
-        // Add category name
-        final category = productData['categories'];
-        if (category != null) {
-          productData['category_name'] = category['name'];
-        }
-
-        // Check if favorited by current user
-        final favorites = productData['user_favorites'] as List?;
-        productData['is_favorited'] =
-            userId != null &&
-            favorites?.any((fav) => fav['user_id'] == userId) == true;
-
-        // Remove nested objects for clean parsing
-        productData.remove('categories');
-        productData.remove('user_favorites');
-
-        return Product.fromJson(productData);
-      }).toList();
+      return products;
     } catch (e) {
       throw Exception('Failed to fetch products: $e');
     }
   }
 
+  // Helper method to parse product condition
+  ProductCondition _parseProductCondition(String condition) {
+    switch (condition.toLowerCase()) {
+      case 'new':
+      case 'brand new':
+        return ProductCondition.new_;
+      case 'like new':
+      case 'excellent':
+        return ProductCondition.likeNew;
+      case 'good':
+        return ProductCondition.good;
+      case 'fair':
+        return ProductCondition.fair;
+      case 'poor':
+        return ProductCondition.poor;
+      default:
+        return ProductCondition.good;
+    }
+  }
+
   // Get product by ID
-  Future<Product?> getProductById(String productId, {String? userId}) async {
+  Future<Product?> getProductById(String productId) async {
     try {
       final response = await SupabaseService.from(_productsTable)
           .select('''
@@ -139,11 +145,8 @@ class ProductRepository {
         productData['category_name'] = category['name'];
       }
 
-      // Check if favorited by current user
-      final favorites = productData['user_favorites'] as List?;
-      productData['is_favorited'] =
-          userId != null &&
-          favorites?.any((fav) => fav['user_id'] == userId) == true;
+      // Check if favorited by current user (for now, just mark as not favorited)
+      productData['is_favorited'] = false;
 
       // Remove nested objects for clean parsing
       productData.remove('user_profiles');
@@ -400,213 +403,43 @@ class ProductRepository {
     String query, {
     int limit = 20,
     int offset = 0,
-    String? userId,
   }) async {
     final filters = ProductFilters(
       searchQuery: query,
       sortBy: ProductSortBy.newest,
     );
 
-    return getProducts(
-      filters: filters,
-      limit: limit,
-      offset: offset,
-      userId: userId,
-    );
+    return getProducts(filters: filters, limit: limit, offset: offset);
   }
 
-  List<Product> _getMockProducts({
-    ProductFilters? filters,
-    int limit = 20,
-    int offset = 0,
-  }) {
-    List<Product> mockProducts = [
-      Product(
-        id: '1',
-        title: 'Engineering Mathematics Textbook',
-        description:
-            'Comprehensive engineering mathematics textbook used for only one semester. No highlighting or damage.',
-        price: 1500.0,
-        condition: ProductCondition.likeNew,
-        categoryId: '1',
-        categoryName: 'Textbooks',
-        sellerId: 'seller1',
-        sellerName: 'Maria Santos',
-        location: 'University Campus',
-        images: [],
-        createdAt: DateTime.now().subtract(const Duration(days: 2)),
-        updatedAt: DateTime.now().subtract(const Duration(days: 2)),
-        viewCount: 45,
-        isFavorited: false,
-        isAvailable: true,
-      ),
-      Product(
-        id: '2',
-        title: 'Gaming Laptop - ASUS ROG',
-        description:
-            'Powerful gaming laptop with RTX 3060, 16GB RAM, perfect for CS students and gaming.',
-        price: 45000.0,
-        condition: ProductCondition.likeNew,
-        categoryId: '2',
-        categoryName: 'Electronics',
-        sellerId: 'seller2',
-        sellerName: 'John Doe',
-        location: 'Engineering Building',
-        images: [],
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
-        updatedAt: DateTime.now().subtract(const Duration(days: 1)),
-        viewCount: 128,
-        isFavorited: true,
-        isAvailable: true,
-      ),
-      Product(
-        id: '3',
-        title: 'Physics Lab Manual',
-        description:
-            'Complete physics laboratory manual with all experiments. Includes data sheets.',
-        price: 800.0,
-        condition: ProductCondition.good,
-        categoryId: '1',
-        categoryName: 'Textbooks',
-        sellerId: 'seller3',
-        sellerName: 'Anna Cruz',
-        location: 'Science Building',
-        images: [],
-        createdAt: DateTime.now().subtract(const Duration(hours: 12)),
-        updatedAt: DateTime.now().subtract(const Duration(hours: 12)),
-        viewCount: 23,
-        isFavorited: false,
-        isAvailable: true,
-      ),
-      Product(
-        id: '4',
-        title: 'School Supplies Bundle',
-        description:
-            'Complete set of school supplies: notebooks, pens, highlighters, calculator.',
-        price: 350.0,
-        condition: ProductCondition.new_,
-        categoryId: '4',
-        categoryName: 'School Supplies',
-        sellerId: 'seller4',
-        sellerName: 'Mike Johnson',
-        location: 'Library Area',
-        images: [],
-        createdAt: DateTime.now().subtract(const Duration(hours: 6)),
-        updatedAt: DateTime.now().subtract(const Duration(hours: 6)),
-        viewCount: 15,
-        isFavorited: false,
-        isAvailable: true,
-      ),
-      Product(
-        id: '5',
-        title: 'Basketball Shoes - Nike',
-        description:
-            'Barely used Nike basketball shoes, size 9. Perfect for PE classes and sports.',
-        price: 2500.0,
-        condition: ProductCondition.likeNew,
-        categoryId: '5',
-        categoryName: 'Sports',
-        sellerId: 'seller5',
-        sellerName: 'Sarah Lee',
-        location: 'Gym Building',
-        images: [],
-        createdAt: DateTime.now().subtract(const Duration(hours: 3)),
-        updatedAt: DateTime.now().subtract(const Duration(hours: 3)),
-        viewCount: 32,
-        isFavorited: false,
-        isAvailable: true,
-      ),
-      Product(
-        id: '6',
-        title: 'Calculus Textbook',
-        description:
-            'Stewart Calculus 8th Edition. Excellent condition with solution manual included.',
-        price: 1200.0,
-        condition: ProductCondition.likeNew,
-        categoryId: '1',
-        categoryName: 'Textbooks',
-        sellerId: 'seller6',
-        sellerName: 'David Kim',
-        location: 'Math Building',
-        images: [],
-        createdAt: DateTime.now().subtract(const Duration(minutes: 30)),
-        updatedAt: DateTime.now().subtract(const Duration(minutes: 30)),
-        viewCount: 8,
-        isFavorited: true,
-        isAvailable: true,
-      ),
-    ];
+  Future<List<Product>> getUserProducts(String userId) async {
+    try {
+      final response = await SupabaseService.from('products')
+          .select('''
+            *,
+            categories(name)
+          ''')
+          .eq('seller_id', userId)
+          .order('created_at', ascending: false);
 
-    // Apply filters
-    if (filters != null) {
-      if (filters.searchQuery?.isNotEmpty == true) {
-        mockProducts = mockProducts.where((product) {
-          return product.title.toLowerCase().contains(
-                filters.searchQuery!.toLowerCase(),
-              ) ||
-              product.description.toLowerCase().contains(
-                filters.searchQuery!.toLowerCase(),
-              );
-        }).toList();
-      }
+      return (response as List).map((item) {
+        final Map<String, dynamic> productData = Map<String, dynamic>.from(
+          item,
+        );
 
-      if (filters.categoryId != null) {
-        mockProducts = mockProducts.where((product) {
-          return product.categoryId == filters.categoryId;
-        }).toList();
-      }
+        // Add category name
+        final category = productData['categories'];
+        if (category != null) {
+          productData['category_name'] = category['name'];
+        }
 
-      if (filters.minPrice != null) {
-        mockProducts = mockProducts.where((product) {
-          return product.price >= filters.minPrice!;
-        }).toList();
-      }
+        // Remove nested objects for clean parsing
+        productData.remove('categories');
 
-      if (filters.maxPrice != null) {
-        mockProducts = mockProducts.where((product) {
-          return product.price <= filters.maxPrice!;
-        }).toList();
-      }
-
-      if (filters.condition != null) {
-        mockProducts = mockProducts.where((product) {
-          return product.condition == filters.condition;
-        }).toList();
-      }
-
-      // Apply sorting
-      switch (filters.sortBy) {
-        case ProductSortBy.newest:
-          mockProducts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-          break;
-        case ProductSortBy.oldest:
-          mockProducts.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-          break;
-        case ProductSortBy.priceLowToHigh:
-          mockProducts.sort((a, b) => a.price.compareTo(b.price));
-          break;
-        case ProductSortBy.priceHighToLow:
-          mockProducts.sort((a, b) => b.price.compareTo(a.price));
-          break;
-        case ProductSortBy.mostViewed:
-          mockProducts.sort((a, b) => b.viewCount.compareTo(a.viewCount));
-          break;
-        case ProductSortBy.mostFavorited:
-          // Mock favorited sorting
-          mockProducts.sort(
-            (a, b) => ((b.isFavorited ?? false) ? 1 : 0).compareTo(
-              (a.isFavorited ?? false) ? 1 : 0,
-            ),
-          );
-          break;
-      }
+        return Product.fromJson(productData);
+      }).toList();
+    } catch (e) {
+      throw Exception('Failed to fetch user products: $e');
     }
-
-    // Apply pagination
-    final start = offset;
-    final end = (start + limit).clamp(0, mockProducts.length);
-
-    if (start >= mockProducts.length) return [];
-    return mockProducts.sublist(start, end);
   }
 }

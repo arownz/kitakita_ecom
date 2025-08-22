@@ -522,7 +522,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         ),
       ),
       trailing: const Icon(
-        Icons.arrow_forward_ios,
+        Icons.arrow_forward_rounded,
         size: 16,
         color: AppColors.textGray,
       ),

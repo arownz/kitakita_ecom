@@ -77,7 +77,6 @@ class ProductsNotifier extends StateNotifier<ProductsState> {
         filters: state.filters,
         limit: _pageSize,
         offset: refresh ? 0 : state.products.length,
-        userId: userId,
       );
 
       if (refresh) {
@@ -145,12 +144,10 @@ final productsProvider = StateNotifierProvider<ProductsNotifier, ProductsState>(
 // Featured products provider
 final featuredProductsProvider = FutureProvider<List<Product>>((ref) async {
   final repository = ref.read(productRepositoryProvider);
-  final userId = ref.watch(currentUserProvider)?.id;
 
   return repository.getProducts(
     filters: const ProductFilters().copyWith(sortBy: ProductSortBy.mostViewed),
     limit: 10,
-    userId: userId,
   );
 });
 
@@ -160,12 +157,11 @@ final productProvider = FutureProvider.family<Product?, String>((
   productId,
 ) async {
   final repository = ref.read(productRepositoryProvider);
-  final userId = ref.watch(currentUserProvider)?.id;
 
   // Increment view count
   repository.incrementViewCount(productId);
 
-  return repository.getProductById(productId, userId: userId);
+  return repository.getProductById(productId);
 });
 
 // User's products provider
@@ -218,10 +214,9 @@ class SearchState {
 }
 
 class SearchNotifier extends StateNotifier<SearchState> {
-  SearchNotifier(this.repository, this.userId) : super(const SearchState());
+  SearchNotifier(this.repository) : super(const SearchState());
 
   final ProductRepository repository;
-  final String? userId;
 
   Future<void> search(String query) async {
     if (query.trim().isEmpty) {
@@ -232,7 +227,7 @@ class SearchNotifier extends StateNotifier<SearchState> {
     state = state.copyWith(query: query, isLoading: true, error: null);
 
     try {
-      final results = await repository.searchProducts(query, userId: userId);
+      final results = await repository.searchProducts(query);
 
       state = state.copyWith(results: results, isLoading: false);
     } catch (e) {
@@ -254,7 +249,6 @@ class SearchNotifier extends StateNotifier<SearchState> {
         filters: filters.copyWith(sortBy: sortBy),
         limit: 40,
         offset: 0,
-        userId: userId,
       );
       state = state.copyWith(results: results, isLoading: false);
     } catch (e) {
@@ -275,8 +269,7 @@ final searchProvider = StateNotifierProvider<SearchNotifier, SearchState>((
   ref,
 ) {
   final repository = ref.read(productRepositoryProvider);
-  final userId = ref.watch(currentUserProvider)?.id;
-  return SearchNotifier(repository, userId);
+  return SearchNotifier(repository);
 });
 
 // Current filters provider

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../shared/constants/app_colors.dart';
 import '../../../../shared/constants/app_text_styles.dart';
 import '../../../../shared/constants/app_sizes.dart';
+// import '../../../../shared/utils/responsive_utils.dart';
 import '../../../../core/router/app_router.dart';
 
 class ChatListPage extends ConsumerStatefulWidget {
@@ -18,41 +19,15 @@ class _ChatListPageState extends ConsumerState<ChatListPage> {
 
   // Mock data for demonstration
   final List<ChatItem> _conversations = [
+    // Remove this later on
     ChatItem(
       id: '1',
       name: 'Maria Santos',
       lastMessage: 'Is the textbook still available?',
       timestamp: '2m ago',
       isOnline: true,
-      unreadCount: 2,
-      productName: 'Engineering Mathematics',
-    ),
-    ChatItem(
-      id: '2',
-      name: 'John Doe',
-      lastMessage: 'Thanks! Let\'s meet at the library',
-      timestamp: '15m ago',
-      isOnline: false,
-      unreadCount: 0,
-      productName: 'Physics Lab Manual',
-    ),
-    ChatItem(
-      id: '3',
-      name: 'Anna Cruz',
-      lastMessage: 'What\'s the condition of the laptop?',
-      timestamp: '1h ago',
-      isOnline: true,
       unreadCount: 1,
-      productName: 'Gaming Laptop',
-    ),
-    ChatItem(
-      id: '4',
-      name: 'Mike Johnson',
-      lastMessage: 'Perfect! I\'ll take it',
-      timestamp: '2h ago',
-      isOnline: false,
-      unreadCount: 0,
-      productName: 'Calculus Textbook',
+      productName: 'Engineering Mathematics',
     ),
   ];
 

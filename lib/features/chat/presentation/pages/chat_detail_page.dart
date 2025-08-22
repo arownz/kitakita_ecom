@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../shared/constants/app_colors.dart';
 import '../../../../shared/constants/app_text_styles.dart';
 import '../../../../shared/constants/app_sizes.dart';
+import '../../../../shared/utils/responsive_utils.dart';
 import '../../../../core/router/app_router.dart';
 
 class ChatDetailPage extends ConsumerStatefulWidget {
@@ -102,18 +103,76 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = ResponsiveUtils.isDesktop(context);
+
     return Scaffold(
-      appBar: _buildAppBar(context),
-      body: Column(
+      backgroundColor: const Color(0xFFF8F9FA),
+      appBar: isDesktop ? null : _buildAppBar(context),
+      body: isDesktop
+          ? _buildDesktopLayout(context)
+          : _buildMobileLayout(context),
+    );
+  }
+
+  Widget _buildDesktopLayout(BuildContext context) {
+    return Row(
+      children: [
+        // Left side - Chat conversation
+        Expanded(flex: 2, child: _buildChatSection(context)),
+        // Right side - Seller info panel
+        Container(
+          width: 320,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            border: Border(left: BorderSide(color: Color(0xFFE9ECEF))),
+          ),
+          child: _buildSellerInfoPanel(context),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileLayout(BuildContext context) {
+    return Column(
+      children: [
+        // Product info card
+        _buildProductCard(),
+
+        // Messages
+        Expanded(
+          child: ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.all(AppSizes.paddingM),
+            itemCount: _messages.length,
+            itemBuilder: (context, index) {
+              final message = _messages[index];
+              return _buildMessageBubble(message);
+            },
+          ),
+        ),
+
+        // Message input
+        _buildMessageInput(),
+      ],
+    );
+  }
+
+  Widget _buildChatSection(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(topRight: Radius.circular(20)),
+      ),
+      child: Column(
         children: [
-          // Product info card
-          _buildProductCard(),
+          // Chat header
+          _buildChatHeader(context),
 
           // Messages
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
-              padding: const EdgeInsets.all(AppSizes.paddingM),
+              padding: const EdgeInsets.all(24),
               itemCount: _messages.length,
               itemBuilder: (context, index) {
                 final message = _messages[index];
@@ -126,6 +185,415 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
           _buildMessageInput(),
         ],
       ),
+    );
+  }
+
+  Widget _buildChatHeader(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: Color(0xFFE9ECEF))),
+      ),
+      child: Row(
+        children: [
+          // Back button
+          IconButton(
+            onPressed: () => context.pop(),
+            icon: const Icon(Icons.arrow_back),
+            style: IconButton.styleFrom(
+              backgroundColor: const Color(0xFFF8F9FA),
+              foregroundColor: const Color(0xFF495057),
+            ),
+          ),
+
+          const SizedBox(width: 16),
+
+          // Contact avatar
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppColors.primaryBlue,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Center(
+              child: Text(
+                _contactName[0].toUpperCase(),
+                style: AppTextStyles.h3.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(width: 16),
+
+          // Contact info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _contactName,
+                  style: AppTextStyles.h3.copyWith(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF1E1E1E),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: _isOnline ? Colors.green : Colors.grey,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      _isOnline ? 'Online' : 'Offline',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: const Color(0xFF6C757D),
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // More options
+          IconButton(
+            onPressed: () => _showChatOptions(context),
+            icon: const Icon(Icons.more_vert),
+            style: IconButton.styleFrom(
+              backgroundColor: const Color(0xFFF8F9FA),
+              foregroundColor: const Color(0xFF495057),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSellerInfoPanel(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Seller profile
+          _buildSellerProfile(),
+
+          const SizedBox(height: 32),
+
+          // Product info
+          _buildProductInfo(),
+
+          const SizedBox(height: 32),
+
+          // Quick actions
+          _buildQuickActions(context),
+
+          const SizedBox(height: 32),
+
+          // Seller stats
+          _buildSellerStats(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSellerProfile() {
+    return Column(
+      children: [
+        // Avatar
+        Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            color: AppColors.primaryBlue,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Text(
+              _contactName[0].toUpperCase(),
+              style: AppTextStyles.h1.copyWith(
+                color: Colors.white,
+                fontSize: 32,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // Name
+        Text(
+          _contactName,
+          style: AppTextStyles.h2.copyWith(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFF1E1E1E),
+          ),
+          textAlign: TextAlign.center,
+        ),
+
+        const SizedBox(height: 8),
+
+        // Status
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: _isOnline ? Colors.green : Colors.grey,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              _isOnline ? 'Online now' : 'Last seen recently',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: const Color(0xFF6C757D),
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProductInfo() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F9FA),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE9ECEF)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Product Discussion',
+            style: AppTextStyles.h4.copyWith(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF1E1E1E),
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFE9ECEF)),
+                ),
+                child: const Icon(
+                  Icons.book,
+                  color: Color(0xFF495057),
+                  size: 24,
+                ),
+              ),
+
+              const SizedBox(width: 12),
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _productName,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF1E1E1E),
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+
+                    const SizedBox(height: 4),
+
+                    Text(
+                      '₱450.00',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primaryBlue,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickActions(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Quick Actions',
+          style: AppTextStyles.h4.copyWith(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF1E1E1E),
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        _buildActionButton(
+          icon: Icons.phone,
+          label: 'Call Seller',
+          onTap: () {
+            // TODO: Implement call functionality
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Call functionality coming soon!')),
+            );
+          },
+        ),
+
+        const SizedBox(height: 12),
+
+        _buildActionButton(
+          icon: Icons.location_on,
+          label: 'View Location',
+          onTap: () {
+            // TODO: Implement location view
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Location view coming soon!')),
+            );
+          },
+        ),
+
+        const SizedBox(height: 12),
+
+        _buildActionButton(
+          icon: Icons.report,
+          label: 'Report User',
+          onTap: () => _showReportDialog(context),
+          isDestructive: true,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    bool isDestructive = false,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      child: TextButton(
+        onPressed: onTap,
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          backgroundColor: const Color(0xFFF8F9FA),
+          foregroundColor: isDestructive ? Colors.red : const Color(0xFF495057),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 20),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: AppTextStyles.bodyMedium.copyWith(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSellerStats() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Seller Stats',
+          style: AppTextStyles.h4.copyWith(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF1E1E1E),
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        _buildStatItem('Products Sold', '23'),
+        const SizedBox(height: 12),
+        _buildStatItem('Rating', '4.8 ⭐'),
+        const SizedBox(height: 12),
+        _buildStatItem('Response Time', '< 1 hour'),
+        const SizedBox(height: 12),
+        _buildStatItem('Member Since', 'Jan 2024'),
+      ],
+    );
+  }
+
+  Widget _buildStatItem(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: AppTextStyles.bodyMedium.copyWith(
+            fontSize: 14,
+            color: const Color(0xFF6C757D),
+          ),
+        ),
+        Text(
+          value,
+          style: AppTextStyles.bodyMedium.copyWith(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF1E1E1E),
+          ),
+        ),
+      ],
     );
   }
 
@@ -380,35 +848,68 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
 
   Widget _buildMessageInput() {
     return Container(
-      padding: const EdgeInsets.all(AppSizes.paddingM),
-      decoration: BoxDecoration(
+      padding: const EdgeInsets.all(24),
+      decoration: const BoxDecoration(
         color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadowColor.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
+        border: Border(top: BorderSide(color: Color(0xFFE9ECEF))),
       ),
       child: Row(
         children: [
+          // Attachment button
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8F9FA),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: const Color(0xFFE9ECEF)),
+            ),
+            child: IconButton(
+              onPressed: () {
+                // TODO: Implement attachment functionality
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Attachment feature coming soon!'),
+                  ),
+                );
+              },
+              icon: const Icon(
+                Icons.attach_file,
+                color: Color(0xFF495057),
+                size: 20,
+              ),
+            ),
+          ),
+
+          const SizedBox(width: 12),
+
+          // Message input field
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: AppColors.lightGray.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(25),
+                color: const Color(0xFFF8F9FA),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: const Color(0xFFE9ECEF)),
               ),
               child: TextField(
                 controller: _messageController,
-                decoration: InputDecoration(
-                  hintText: 'Type a message...',
-                  hintStyle: AppTextStyles.inputHint,
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: AppSizes.paddingM,
-                    vertical: AppSizes.paddingS,
+                decoration: const InputDecoration(
+                  hintText: 'Type your message...',
+                  hintStyle: TextStyle(
+                    color: Color(0xFF6C757D),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w400,
                   ),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
+                ),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w400,
+                  color: Color(0xFF212529),
                 ),
                 maxLines: null,
                 textCapitalization: TextCapitalization.sentences,
@@ -416,18 +917,87 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
               ),
             ),
           ),
-          const SizedBox(width: AppSizes.spaceS),
+
+          const SizedBox(width: 12),
+
+          // Send button
           Container(
-            decoration: const BoxDecoration(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
               color: AppColors.primaryBlue,
-              shape: BoxShape.circle,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primaryBlue.withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: IconButton(
               onPressed: _sendMessage,
-              icon: const Icon(Icons.send, color: AppColors.white),
+              icon: const Icon(Icons.send, color: Colors.white, size: 20),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showChatOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Chat Options',
+              style: AppTextStyles.h3.copyWith(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF1E1E1E),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            ListTile(
+              leading: const Icon(Icons.info_outline, color: Color(0xFF495057)),
+              title: const Text('View Profile'),
+              onTap: () {
+                Navigator.of(context).pop();
+                // TODO: Navigate to user profile
+              },
+            ),
+
+            ListTile(
+              leading: const Icon(Icons.block, color: Colors.red),
+              title: const Text('Block User'),
+              onTap: () {
+                Navigator.of(context).pop();
+                // TODO: Implement block functionality
+              },
+            ),
+
+            ListTile(
+              leading: const Icon(Icons.report, color: Colors.red),
+              title: const Text('Report User'),
+              onTap: () {
+                Navigator.of(context).pop();
+                _showReportDialog(context);
+              },
+            ),
+
+            const SizedBox(height: 16),
+          ],
+        ),
       ),
     );
   }

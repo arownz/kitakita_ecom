@@ -8,6 +8,8 @@ import '../../../../shared/providers/auth_provider.dart';
 import '../../../../shared/utils/responsive_utils.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../shared/services/supabase_service.dart';
+import '../../../../shared/widgets/email_verification_banner.dart';
+import '../../../../shared/layouts/main_layout.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
@@ -71,11 +73,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       );
     }
 
-    return Scaffold(
+    final content = Scaffold(
       appBar: AppBar(
         title: const Text('My Profile'),
         backgroundColor: AppColors.primaryBlue,
         foregroundColor: AppColors.white,
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             icon: Icon(_isEditing ? Icons.close : Icons.edit),
@@ -94,6 +97,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         padding: ResponsiveUtils.getScreenPadding(context),
         child: Column(
           children: [
+            // Email verification banner
+            const EmailVerificationBanner(),
             const SizedBox(height: AppSizes.spaceL),
 
             // Profile Avatar
@@ -114,6 +119,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         ),
       ),
     );
+
+    return MainLayout(currentIndex: 4, child: content);
   }
 
   Widget _buildProfileAvatar() {
@@ -139,15 +146,34 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               ),
             ],
           ),
-          child: Center(
-            child: Text(
-              initial,
-              style: AppTextStyles.h1.copyWith(
-                color: AppColors.white,
-                fontSize: 48,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+          child: ClipOval(
+            child: user?.userMetadata?['profile_image_url'] != null
+                ? Image.network(
+                    user!.userMetadata!['profile_image_url']!,
+                    fit: BoxFit.cover,
+                    width: 120,
+                    height: 120,
+                    errorBuilder: (context, error, stackTrace) => Center(
+                      child: Text(
+                        initial,
+                        style: AppTextStyles.h1.copyWith(
+                          color: AppColors.white,
+                          fontSize: 48,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  )
+                : Center(
+                    child: Text(
+                      initial,
+                      style: AppTextStyles.h1.copyWith(
+                        color: AppColors.white,
+                        fontSize: 48,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
           ),
         ),
         if (_isEditing)
@@ -381,7 +407,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           style: AppTextStyles.bodySmall.copyWith(color: AppColors.textGray),
         ),
         trailing: const Icon(
-          Icons.arrow_forward_ios,
+          Icons.arrow_forward_rounded,
           size: 16,
           color: AppColors.textGray,
         ),
@@ -455,12 +481,17 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.of(context).pop();
-              ref.read(authProvider.notifier).signOut();
-              context.go(AppRoutes.landing);
+              await ref.read(authProvider.notifier).signOut();
+              if (context.mounted) {
+                context.go(AppRoutes.landing);
+              }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: AppColors.white,
+            ),
             child: const Text('Sign Out'),
           ),
         ],

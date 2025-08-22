@@ -9,6 +9,7 @@ import '../../../../shared/providers/auth_provider.dart';
 import '../../../../shared/services/supabase_service.dart';
 import '../../../marketplace/domain/models/product.dart';
 import '../../../marketplace/presentation/widgets/product_card.dart';
+import '../../../../shared/layouts/main_layout.dart';
 import '../../../../core/router/app_router.dart';
 
 class FavoritesPage extends ConsumerStatefulWidget {
@@ -39,9 +40,9 @@ class _FavoritesPageState extends ConsumerState<FavoritesPage> {
       final user = ref.read(currentUserProvider);
       if (user != null) {
         // Get user's favorite product IDs
-        final favoritesResponse = await SupabaseService.from('user_favorites')
-            .select('product_id')
-            .eq('user_id', user.id);
+        final favoritesResponse = await SupabaseService.from(
+          'user_favorites',
+        ).select('product_id').eq('user_id', user.id);
 
         if (favoritesResponse.isNotEmpty) {
           final productIds = (favoritesResponse as List)
@@ -50,7 +51,9 @@ class _FavoritesPageState extends ConsumerState<FavoritesPage> {
 
           // Get the actual products
           final productsResponse = await SupabaseService.from('products')
-              .select('*, categories(name), user_profiles(first_name, last_name)')
+              .select(
+                '*, categories(name), user_profiles(first_name, last_name)',
+              )
               .inFilter('id', productIds)
               .order('created_at', ascending: false);
 
@@ -58,7 +61,8 @@ class _FavoritesPageState extends ConsumerState<FavoritesPage> {
             final categoryData = data['categories'] as Map<String, dynamic>?;
             final sellerData = data['user_profiles'] as Map<String, dynamic>?;
             final sellerName = sellerData != null
-                ? '${sellerData['first_name'] ?? ''} ${sellerData['last_name'] ?? ''}'.trim()
+                ? '${sellerData['first_name'] ?? ''} ${sellerData['last_name'] ?? ''}'
+                      .trim()
                 : 'Unknown Seller';
 
             return Product(
@@ -107,13 +111,12 @@ class _FavoritesPageState extends ConsumerState<FavoritesPage> {
     try {
       final user = ref.read(currentUserProvider);
       if (user != null) {
-        await SupabaseService.from('user_favorites')
-            .delete()
-            .eq('user_id', user.id)
-            .eq('product_id', productId);
+        await SupabaseService.from(
+          'user_favorites',
+        ).delete().eq('user_id', user.id).eq('product_id', productId);
 
         await _loadFavorites(); // Refresh the list
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -137,18 +140,21 @@ class _FavoritesPageState extends ConsumerState<FavoritesPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    final content = Scaffold(
       appBar: AppBar(
         title: const Text('My Favorites'),
         backgroundColor: AppColors.primaryBlue,
         foregroundColor: AppColors.white,
+        automaticallyImplyLeading: false,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? _buildErrorState()
-              : _buildFavoritesList(),
+          ? _buildErrorState()
+          : _buildFavoritesList(),
     );
+
+    return MainLayout(currentIndex: 3, child: content);
   }
 
   Widget _buildErrorState() {
@@ -169,10 +175,7 @@ class _FavoritesPageState extends ConsumerState<FavoritesPage> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppSizes.spaceL),
-          ElevatedButton(
-            onPressed: _loadFavorites,
-            child: const Text('Retry'),
-          ),
+          ElevatedButton(onPressed: _loadFavorites, child: const Text('Retry')),
         ],
       ),
     );
@@ -197,7 +200,9 @@ class _FavoritesPageState extends ConsumerState<FavoritesPage> {
             const SizedBox(height: AppSizes.spaceS),
             Text(
               'Start exploring products and add them to your favorites',
-              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textGray),
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textGray,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSizes.spaceL),

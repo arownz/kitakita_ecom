@@ -43,39 +43,6 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
   final List<NotificationItem> _notifications = [
     NotificationItem(
       id: '1',
-      title: 'Product Sold!',
-      message:
-          'Your "Engineering Mathematics Textbook" has been sold to Maria Santos.',
-      type: NotificationType.sale,
-      timestamp: DateTime.now().subtract(const Duration(minutes: 30)),
-      isRead: false,
-    ),
-    NotificationItem(
-      id: '2',
-      title: 'New Message',
-      message: 'John Doe sent you a message about "Physics Lab Manual".',
-      type: NotificationType.message,
-      timestamp: DateTime.now().subtract(const Duration(hours: 2)),
-      isRead: false,
-    ),
-    NotificationItem(
-      id: '3',
-      title: 'Price Drop Alert',
-      message: 'Gaming Laptop price dropped to ₱25,000 in your favorites.',
-      type: NotificationType.priceAlert,
-      timestamp: DateTime.now().subtract(const Duration(hours: 4)),
-      isRead: true,
-    ),
-    NotificationItem(
-      id: '4',
-      title: 'Product Interest',
-      message: 'Someone favorited your "Calculus Textbook".',
-      type: NotificationType.interest,
-      timestamp: DateTime.now().subtract(const Duration(days: 1)),
-      isRead: true,
-    ),
-    NotificationItem(
-      id: '5',
       title: 'Welcome to KitaKita!',
       message:
           'Start buying and selling with fellow students. Complete your profile to get started.',

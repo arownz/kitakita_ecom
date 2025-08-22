@@ -61,18 +61,6 @@ class _AddProductPageState extends ConsumerState<AddProductPage> {
         title: const Text('Add Product'),
         backgroundColor: AppColors.primaryBlue,
         foregroundColor: AppColors.white,
-        actions: [
-          TextButton(
-            onPressed: _isLoading ? null : _submitProduct,
-            child: Text(
-              'Post',
-              style: TextStyle(
-                color: _isLoading ? AppColors.textGray : AppColors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
       ),
       body: categoriesAsync.when(
         data: (categories) => _buildForm(categories),
@@ -362,13 +350,15 @@ class _AddProductPageState extends ConsumerState<AddProductPage> {
       controller: controller,
       keyboardType: keyboardType,
       maxLines: maxLines,
-      style: AppTextStyles.bodyMedium,
+      style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primaryBlue),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: AppTextStyles.inputLabel,
+        labelStyle: AppTextStyles.inputLabel.copyWith(
+          color: AppColors.primaryBlue,
+        ),
         prefixIcon: Icon(icon, color: AppColors.primaryBlue),
         filled: true,
-        fillColor: AppColors.lightGray.withValues(alpha: 0.3),
+        fillColor: AppColors.white,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
@@ -399,12 +389,15 @@ class _AddProductPageState extends ConsumerState<AddProductPage> {
   Widget _buildCategoryDropdown(List<Category> categories) {
     return DropdownButtonFormField<String>(
       value: _selectedCategoryId,
+      style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primaryBlue),
       decoration: InputDecoration(
         labelText: 'Category',
-        labelStyle: AppTextStyles.inputLabel,
+        labelStyle: AppTextStyles.inputLabel.copyWith(
+          color: AppColors.primaryBlue,
+        ),
         prefixIcon: const Icon(Icons.category, color: AppColors.primaryBlue),
         filled: true,
-        fillColor: AppColors.lightGray.withValues(alpha: 0.3),
+        fillColor: AppColors.white,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
@@ -440,12 +433,15 @@ class _AddProductPageState extends ConsumerState<AddProductPage> {
   Widget _buildConditionDropdown() {
     return DropdownButtonFormField<String>(
       value: _selectedCondition,
+      style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primaryBlue),
       decoration: InputDecoration(
         labelText: 'Condition',
-        labelStyle: AppTextStyles.inputLabel,
+        labelStyle: AppTextStyles.inputLabel.copyWith(
+          color: AppColors.primaryBlue,
+        ),
         prefixIcon: const Icon(Icons.star, color: AppColors.primaryBlue),
         filled: true,
-        fillColor: AppColors.lightGray.withValues(alpha: 0.3),
+        fillColor: AppColors.white,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
@@ -536,7 +532,7 @@ class _AddProductPageState extends ConsumerState<AddProductPage> {
       final userId = ref.read(currentUserProvider)?.id ?? '';
       final List<String> uploadedUrls = [];
       if (_selectedImages.isNotEmpty) {
-        final bucket = SupabaseService.storage.from('product-images');
+        final bucket = SupabaseService.storage.from('product_images');
         final uuid = const Uuid();
         for (int i = 0; i < _selectedImages.length; i++) {
           final imageBytes = await _selectedImages[i].readAsBytes();
