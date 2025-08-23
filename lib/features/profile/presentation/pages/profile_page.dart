@@ -77,8 +77,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       padding: ResponsiveUtils.getScreenPadding(context),
       child: Column(
         children: [
-          // Email verification banner
-          const EmailVerificationBanner(),
+          // Email verification banner (permanent on profile page)
+          const EmailVerificationBanner(isPermanent: true),
           const SizedBox(height: AppSizes.spaceL),
 
           // Profile Avatar

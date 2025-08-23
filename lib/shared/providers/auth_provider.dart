@@ -61,15 +61,45 @@ class AuthNotifier extends StateNotifier<AuthState> {
         _logger.i('Token refreshed');
         if (authState.session?.user != null) {
           _setUser(authState.session?.user);
+        } else {
+          // Token refresh failed - probably account deleted
+          _logger.w('Token refresh failed - account may be deleted');
+          _clearUser();
+        }
+      } else if (authState.event == AuthChangeEvent.passwordRecovery) {
+        _logger.i('Password recovery event');
+      } else if (authState.event == AuthChangeEvent.initialSession) {
+        _logger.i('Initial session event');
+        if (authState.session?.user != null) {
+          _setUser(authState.session?.user);
         }
       }
     });
 
-    // Set initial user if already logged in
+    // Set initial user if already logged in and validate account still exists
     final currentUser = SupabaseService.currentUser;
     if (currentUser != null) {
       _logger.i('Initial user found: ${currentUser.email}');
-      _setUser(currentUser);
+      _validateAndSetUser(currentUser);
+    }
+  }
+
+  // Validate user account still exists before setting
+  Future<void> _validateAndSetUser(User user) async {
+    try {
+      // Try to refresh the session to validate account still exists
+      final response = await SupabaseService.client.auth.refreshSession();
+      if (response.user != null) {
+        _setUser(response.user);
+      } else {
+        _logger.w('User account no longer exists - auto logout');
+        await SupabaseService.signOut();
+        _clearUser();
+      }
+    } catch (e) {
+      _logger.w('Failed to validate user session: $e - auto logout');
+      await SupabaseService.signOut();
+      _clearUser();
     }
   }
 
@@ -252,7 +282,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<bool> signIn({required String email, required String password}) async {
-    state = state.copyWith(isLoading: true, error: null);
+    _logger.i('Starting sign in process - clearing previous errors');
+    // Don't clear error immediately - wait for success or new error
+    state = state.copyWith(isLoading: true);
 
     try {
       _logger.i('Attempting sign in for: $email');
@@ -267,7 +299,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         // Set user state immediately to ensure router can react
         await _setUser(response.user);
 
-        state = state.copyWith(isLoading: false);
+        state = state.copyWith(isLoading: false, error: null);
         return true;
       } else {
         _logger.w('Sign in failed: no user in response');
@@ -279,9 +311,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
       }
     } catch (e) {
       _logger.e('Sign in error: $e');
+      final humanizedError = _humanizeAuthError(e.toString());
+      _logger.w('Setting auth error state: $humanizedError');
+
       state = state.copyWith(
         isLoading: false,
-        error: _humanizeAuthError(e.toString()),
+        error: humanizedError,
+        user: null, // Ensure user is null on error
+        userRole: null,
+        isEmailVerified: false,
+      );
+
+      _logger.i(
+        'Auth state after error: isLoading=${state.isLoading}, hasError=${state.error != null}, error=${state.error}',
       );
       return false;
     }
@@ -321,31 +363,45 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   String _humanizeAuthError(String error) {
-    if (error.toLowerCase().contains('invalid login credentials')) {
+    _logger.w('Auth error being humanized: $error');
+
+    // Check for various Supabase auth error patterns
+    if (error.toLowerCase().contains('invalid login credentials') ||
+        error.toLowerCase().contains('invalid_credentials') ||
+        error.toLowerCase().contains('invalid email or password')) {
       return 'Invalid email or password. Please check your credentials and try again.';
     }
-    if (error.toLowerCase().contains('email not confirmed')) {
+    if (error.toLowerCase().contains('email not confirmed') ||
+        error.toLowerCase().contains('email_not_confirmed')) {
       return 'Please verify your email address before signing in.';
     }
-    if (error.toLowerCase().contains('user not found')) {
-      return 'No account found with this email address.';
+    if (error.toLowerCase().contains('user not found') ||
+        error.toLowerCase().contains('user_not_found') ||
+        error.toLowerCase().contains('no account found')) {
+      return 'No account found with this email address. Please register first.';
     }
-    if (error.toLowerCase().contains('too many requests')) {
+    if (error.toLowerCase().contains('too many requests') ||
+        error.toLowerCase().contains('rate limit')) {
       return 'Too many attempts. Please wait a moment before trying again.';
     }
-    if (error.toLowerCase().contains('network')) {
+    if (error.toLowerCase().contains('network') ||
+        error.toLowerCase().contains('connection')) {
       return 'Network error. Please check your internet connection.';
     }
-    if (error.toLowerCase().contains('signup not allowed')) {
+    if (error.toLowerCase().contains('signup not allowed') ||
+        error.toLowerCase().contains('signups_disabled')) {
       return 'Account registration is currently unavailable.';
     }
-    if (error.toLowerCase().contains('email already registered')) {
+    if (error.toLowerCase().contains('email already registered') ||
+        error.toLowerCase().contains('user_already_registered')) {
       return 'An account with this email already exists. Try signing in instead.';
     }
-    if (error.toLowerCase().contains('weak password')) {
+    if (error.toLowerCase().contains('weak password') ||
+        error.toLowerCase().contains('password')) {
       return 'Password is too weak. Please choose a stronger password.';
     }
-    if (error.toLowerCase().contains('invalid email')) {
+    if (error.toLowerCase().contains('invalid email') ||
+        error.toLowerCase().contains('email')) {
       return 'Please enter a valid email address.';
     }
 

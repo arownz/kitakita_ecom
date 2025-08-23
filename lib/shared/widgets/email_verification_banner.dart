@@ -5,17 +5,40 @@ import '../constants/app_text_styles.dart';
 import '../constants/app_sizes.dart';
 import '../providers/auth_provider.dart';
 
-class EmailVerificationBanner extends ConsumerWidget {
-  const EmailVerificationBanner({super.key});
+class EmailVerificationBanner extends ConsumerStatefulWidget {
+  final bool isPermanent; // If true, no close button (for profile page)
+
+  const EmailVerificationBanner({super.key, this.isPermanent = false});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<EmailVerificationBanner> createState() =>
+      _EmailVerificationBannerState();
+}
+
+class _EmailVerificationBannerState
+    extends ConsumerState<EmailVerificationBanner> {
+  bool _isDismissed = false;
+  String? _lastUserEmail; // Track user changes to reset dismissal
+
+  @override
+  Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final isEmailVerified = ref.watch(isEmailVerifiedProvider);
     final isLoggedIn = ref.watch(isLoggedInProvider);
+    final currentUserEmail = authState.user?.email;
 
-    // Don't show banner if user is not logged in or email is already verified
-    if (!isLoggedIn || isEmailVerified) {
+    // Reset dismissal when user changes (new login)
+    if (currentUserEmail != _lastUserEmail) {
+      _lastUserEmail = currentUserEmail;
+      if (_isDismissed) {
+        _isDismissed = false;
+      }
+    }
+
+    // Don't show banner if user is not logged in, email is already verified, or dismissed (and not permanent)
+    if (!isLoggedIn ||
+        isEmailVerified ||
+        (_isDismissed && !widget.isPermanent)) {
       return const SizedBox.shrink();
     }
 
@@ -69,6 +92,29 @@ class EmailVerificationBanner extends ConsumerWidget {
                   ],
                 ),
               ),
+              // Close button (only if not permanent)
+              if (!widget.isPermanent) ...[
+                const SizedBox(width: AppSizes.spaceS),
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _isDismissed = true;
+                    });
+                  },
+                  icon: const Icon(
+                    Icons.close,
+                    color: AppColors.primaryBlue,
+                    size: 20,
+                  ),
+                  style: IconButton.styleFrom(
+                    padding: const EdgeInsets.all(4),
+                    minimumSize: const Size(24, 24),
+                    backgroundColor: AppColors.primaryBlue.withValues(
+                      alpha: 0.1,
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
           const SizedBox(height: AppSizes.spaceM),

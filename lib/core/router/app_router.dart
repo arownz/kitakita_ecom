@@ -40,6 +40,8 @@ class AppRouter {
   static GoRouter router(Ref ref) {
     return GoRouter(
       initialLocation: AppRoutes.landing,
+      debugLogDiagnostics: true, // Enable router debugging
+      redirectLimit: 10, // Prevent infinite redirects
       redirect: (context, state) {
         final authState = ref.read(authProvider);
         final isLoggedIn = authState.user != null;
@@ -51,6 +53,16 @@ class AppRouter {
             currentLocation == AppRoutes.login ||
             currentLocation == AppRoutes.register ||
             currentLocation == AppRoutes.landing;
+
+        // CRITICAL: If there's an auth error, NEVER redirect anywhere
+        if (hasError) {
+          if (kDebugMode) {
+            print(
+              '🚨 AUTH ERROR DETECTED AT START - NO REDIRECT ALLOWED - Error: ${authState.error}',
+            );
+          }
+          return null;
+        }
 
         if (kDebugMode) {
           print(
@@ -81,22 +93,81 @@ class AppRouter {
           }
         }
 
-        // Don't redirect from login/register pages when there's an auth error
+        // CRITICAL: Never redirect from login/register pages when there's an auth error
         if (hasError &&
             (currentLocation == AppRoutes.login ||
                 currentLocation == AppRoutes.register)) {
           if (kDebugMode) {
-            print('Auth error on auth page, staying put');
-            return null;
+            print(
+              'AUTH ERROR DETECTED - STAYING ON LOGIN PAGE - hasError: $hasError',
+            );
           }
+          return null;
+        }
+
+        // CRITICAL: Never redirect from login/register pages when not logged in
+        if (!isLoggedIn &&
+            (currentLocation == AppRoutes.login ||
+                currentLocation == AppRoutes.register)) {
+          if (kDebugMode) {
+            print('NOT LOGGED IN ON AUTH PAGE - STAYING PUT');
+          }
+          return null;
+        }
+
+        // CRITICAL: If we're on login/register, NEVER redirect to landing
+        if (currentLocation == AppRoutes.login ||
+            currentLocation == AppRoutes.register) {
+          if (kDebugMode) {
+            print(
+              '🚨 ON LOGIN/REGISTER PAGE - NO REDIRECT ALLOWED - Location: $currentLocation',
+            );
+          }
+          return null;
+        }
+
+        // CRITICAL: If we're on landing page, NEVER redirect away
+        if (currentLocation == AppRoutes.landing) {
+          if (kDebugMode) {
+            print(
+              '🚨 ON LANDING PAGE - NO REDIRECT ALLOWED - Location: $currentLocation',
+            );
+          }
+          return null;
         }
 
         // If not logged in and trying to access protected routes
         if (!isLoggedIn && !isAuthPage) {
+          // CRITICAL: Don't redirect to landing if there's an auth error
+          if (hasError) {
+            if (kDebugMode) {
+              print('🚨 AUTH ERROR EXISTS - NOT REDIRECTING TO LANDING');
+            }
+            return null;
+          }
+
           if (kDebugMode) {
             print('Not logged in, redirecting to landing');
           }
           return AppRoutes.landing;
+        }
+
+        // CRITICAL: Final safety check - if we're on any auth page, NEVER redirect
+        if (isAuthPage) {
+          if (kDebugMode) {
+            print(
+              '🚨 FINAL SAFETY: ON AUTH PAGE - NO REDIRECT ALLOWED - Location: $currentLocation',
+            );
+          }
+          return null;
+        }
+
+        // CRITICAL: If there's an auth error, NEVER redirect anywhere
+        if (hasError) {
+          if (kDebugMode) {
+            print('🚨 AUTH ERROR EXISTS - NO REDIRECT ALLOWED ANYWHERE');
+          }
+          return null;
         }
 
         // Admin trying to access student routes

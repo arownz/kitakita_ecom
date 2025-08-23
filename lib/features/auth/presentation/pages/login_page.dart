@@ -70,10 +70,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         }
       } else {
         if (kDebugMode) {
-          print('Login failed, staying on login page');
+          print('LOGIN FAILED - STAYING ON LOGIN PAGE - NO NAVIGATION');
         }
         // Login failed - stay on login page and show error
         // Error is already displayed via authState.error
+        // CRITICAL: Do not call any navigation methods here
       }
     }
   }
