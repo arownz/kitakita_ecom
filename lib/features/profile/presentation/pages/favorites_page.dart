@@ -140,21 +140,13 @@ class _FavoritesPageState extends ConsumerState<FavoritesPage> {
 
   @override
   Widget build(BuildContext context) {
-    final content = Scaffold(
-      appBar: AppBar(
-        title: const Text('My Favorites'),
-        backgroundColor: AppColors.primaryBlue,
-        foregroundColor: AppColors.white,
-        automaticallyImplyLeading: false,
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-          ? _buildErrorState()
-          : _buildFavoritesList(),
-    );
+    final content = _isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : _error != null
+        ? _buildErrorState()
+        : _buildFavoritesList();
 
-    return MainLayout(currentIndex: 3, child: content);
+    return MainLayout(currentIndex: 3, title: 'My Favorites', child: content);
   }
 
   Widget _buildErrorState() {

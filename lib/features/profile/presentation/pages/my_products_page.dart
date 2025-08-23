@@ -7,6 +7,7 @@ import '../../../../shared/constants/app_sizes.dart';
 import '../../../../shared/utils/responsive_utils.dart';
 import '../../../../shared/providers/auth_provider.dart';
 import '../../../../shared/services/supabase_service.dart';
+import '../../../../shared/layouts/main_layout.dart';
 import '../../../marketplace/domain/models/product.dart';
 import '../../../marketplace/presentation/widgets/product_card.dart';
 import '../../../../core/router/app_router.dart';
@@ -108,23 +109,22 @@ class _MyProductsPageState extends ConsumerState<MyProductsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Products'),
-        backgroundColor: AppColors.primaryBlue,
-        foregroundColor: AppColors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () => context.push(AppRoutes.addProduct),
-          ),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-          ? _buildErrorState()
-          : _buildProductsList(),
+    final content = _isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : _error != null
+        ? _buildErrorState()
+        : _buildProductsList();
+
+    return MainLayout(
+      currentIndex: -1, // Accessed from profile
+      title: 'My Products',
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.add),
+          onPressed: () => context.push(AppRoutes.addProduct),
+        ),
+      ],
+      child: content,
     );
   }
 
@@ -409,7 +409,9 @@ class _MyProductsPageState extends ConsumerState<MyProductsPage> {
                       await _loadMyProducts();
 
                       if (mounted) {
-                        ScaffoldMessenger.of(Navigator.of(this.context).context).showSnackBar(
+                        ScaffoldMessenger.of(
+                          Navigator.of(this.context).context,
+                        ).showSnackBar(
                           const SnackBar(
                             content: Text('Product updated successfully'),
                             backgroundColor: AppColors.success,
@@ -418,7 +420,9 @@ class _MyProductsPageState extends ConsumerState<MyProductsPage> {
                       }
                     } catch (e) {
                       if (mounted) {
-                        ScaffoldMessenger.of(Navigator.of(this.context).context).showSnackBar(
+                        ScaffoldMessenger.of(
+                          Navigator.of(this.context).context,
+                        ).showSnackBar(
                           SnackBar(
                             content: Text('Failed to update: $e'),
                             backgroundColor: AppColors.error,

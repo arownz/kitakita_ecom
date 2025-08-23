@@ -73,54 +73,50 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       );
     }
 
-    final content = Scaffold(
-      appBar: AppBar(
-        title: const Text('My Profile'),
-        backgroundColor: AppColors.primaryBlue,
-        foregroundColor: AppColors.white,
-        automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            icon: Icon(_isEditing ? Icons.close : Icons.edit),
-            onPressed: () {
-              setState(() {
-                _isEditing = !_isEditing;
-                if (!_isEditing) {
-                  _loadUserData(); // Reset data if canceling edit
-                }
-              });
-            },
-          ),
+    final content = SingleChildScrollView(
+      padding: ResponsiveUtils.getScreenPadding(context),
+      child: Column(
+        children: [
+          // Email verification banner
+          const EmailVerificationBanner(),
+          const SizedBox(height: AppSizes.spaceL),
+
+          // Profile Avatar
+          _buildProfileAvatar(),
+
+          const SizedBox(height: AppSizes.spaceXL),
+
+          // Profile Form
+          _buildProfileForm(),
+
+          const SizedBox(height: AppSizes.spaceXL),
+
+          // Action Buttons
+          _buildActionButtons(context),
+
+          const SizedBox(height: AppSizes.spaceXXL),
         ],
-      ),
-      body: SingleChildScrollView(
-        padding: ResponsiveUtils.getScreenPadding(context),
-        child: Column(
-          children: [
-            // Email verification banner
-            const EmailVerificationBanner(),
-            const SizedBox(height: AppSizes.spaceL),
-
-            // Profile Avatar
-            _buildProfileAvatar(),
-
-            const SizedBox(height: AppSizes.spaceXL),
-
-            // Profile Form
-            _buildProfileForm(),
-
-            const SizedBox(height: AppSizes.spaceXL),
-
-            // Action Buttons
-            _buildActionButtons(context),
-
-            const SizedBox(height: AppSizes.spaceXXL),
-          ],
-        ),
       ),
     );
 
-    return MainLayout(currentIndex: 4, child: content);
+    return MainLayout(
+      currentIndex: 4,
+      title: 'My Profile',
+      actions: [
+        IconButton(
+          icon: Icon(_isEditing ? Icons.close : Icons.edit),
+          onPressed: () {
+            setState(() {
+              _isEditing = !_isEditing;
+              if (!_isEditing) {
+                _loadUserData(); // Reset data if canceling edit
+              }
+            });
+          },
+        ),
+      ],
+      child: content,
+    );
   }
 
   Widget _buildProfileAvatar() {

@@ -121,7 +121,7 @@ class LandingPage extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Image.asset(
-                'assets/images/kitakita_logo.png',
+                'assets/images/ecomlogo.png',
                 fit: BoxFit.contain,
               ),
             ),

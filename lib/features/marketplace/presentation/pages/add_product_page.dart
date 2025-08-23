@@ -10,6 +10,7 @@ import '../../../../shared/constants/app_colors.dart';
 import '../../../../shared/constants/app_text_styles.dart';
 import '../../../../shared/constants/app_sizes.dart';
 import '../../../../shared/utils/responsive_utils.dart';
+import '../../../../shared/layouts/main_layout.dart';
 import '../providers/marketplace_providers.dart';
 import '../../domain/models/product.dart';
 import '../../../../shared/providers/auth_provider.dart';
@@ -56,31 +57,26 @@ class _AddProductPageState extends ConsumerState<AddProductPage> {
   Widget build(BuildContext context) {
     final categoriesAsync = ref.watch(categoriesProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Add Product'),
-        backgroundColor: AppColors.primaryBlue,
-        foregroundColor: AppColors.white,
-      ),
-      body: categoriesAsync.when(
-        data: (categories) => _buildForm(categories),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error, size: 64, color: AppColors.error),
-              const SizedBox(height: 16),
-              Text('Failed to load categories: $error'),
-              ElevatedButton(
-                onPressed: () => ref.refresh(categoriesProvider),
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
+    final content = categoriesAsync.when(
+      data: (categories) => _buildForm(categories),
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error, size: 64, color: AppColors.error),
+            const SizedBox(height: 16),
+            Text('Failed to load categories: $error'),
+            ElevatedButton(
+              onPressed: () => ref.refresh(categoriesProvider),
+              child: const Text('Retry'),
+            ),
+          ],
         ),
       ),
     );
+
+    return MainLayout(currentIndex: 1, title: 'Sell Product', child: content);
   }
 
   Widget _buildForm(List<Category> categories) {

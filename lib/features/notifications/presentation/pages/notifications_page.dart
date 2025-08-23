@@ -4,6 +4,7 @@ import '../../../../shared/constants/app_colors.dart';
 import '../../../../shared/constants/app_text_styles.dart';
 import '../../../../shared/constants/app_sizes.dart';
 import '../../../../shared/utils/responsive_utils.dart';
+import '../../../../shared/layouts/main_layout.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class NotificationsPage extends ConsumerStatefulWidget {
@@ -56,55 +57,44 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
   Widget build(BuildContext context) {
     final unreadCount = _notifications.where((n) => !n.isRead).length;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Notifications'),
-            if (unreadCount > 0)
-              Text(
-                '$unreadCount unread',
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.primaryYellow,
-                ),
-              ),
-          ],
-        ),
-        backgroundColor: AppColors.primaryBlue,
-        foregroundColor: AppColors.white,
-        actions: [
-          if (unreadCount > 0)
-            TextButton(
-              onPressed: _markAllAsRead,
-              child: Text(
-                'Mark all read',
-                style: TextStyle(
-                  color: AppColors.primaryYellow,
-                  fontWeight: FontWeight.w600,
-                ),
+    final content = _notifications.isEmpty
+        ? _buildEmptyState()
+        : ListView.builder(
+            padding: EdgeInsets.all(
+              ResponsiveUtils.isMobile(context)
+                  ? AppSizes.paddingM
+                  : AppSizes.paddingL,
+            ),
+            itemCount: _notifications.length,
+            itemBuilder: (context, index) {
+              final notification = _notifications[index];
+              return _buildNotificationItem(notification, index);
+            },
+          );
+
+    return MainLayout(
+      currentIndex: -1, // Not a main navigation item
+      title: unreadCount > 0 
+          ? 'Notifications ($unreadCount unread)'
+          : 'Notifications',
+      actions: [
+        if (unreadCount > 0)
+          TextButton(
+            onPressed: _markAllAsRead,
+            child: Text(
+              'Mark all read',
+              style: TextStyle(
+                color: AppColors.primaryYellow,
+                fontWeight: FontWeight.w600,
               ),
             ),
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: _showNotificationSettings,
           ),
-        ],
-      ),
-      body: _notifications.isEmpty
-          ? _buildEmptyState()
-          : ListView.builder(
-              padding: EdgeInsets.all(
-                ResponsiveUtils.isMobile(context)
-                    ? AppSizes.paddingM
-                    : AppSizes.paddingL,
-              ),
-              itemCount: _notifications.length,
-              itemBuilder: (context, index) {
-                final notification = _notifications[index];
-                return _buildNotificationItem(notification, index);
-              },
-            ),
+        IconButton(
+          icon: const Icon(Icons.settings),
+          onPressed: _showNotificationSettings,
+        ),
+      ],
+      child: content,
     );
   }
 

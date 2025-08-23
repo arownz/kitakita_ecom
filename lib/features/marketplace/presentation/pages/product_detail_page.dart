@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../shared/constants/app_colors.dart';
 import '../../../../shared/constants/app_text_styles.dart';
 import '../../../../shared/constants/app_sizes.dart';
+import '../../../../shared/layouts/main_layout.dart';
 import '../../../../core/router/app_router.dart';
 
 class ProductDetailPage extends ConsumerWidget {
@@ -13,49 +14,7 @@ class ProductDetailPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Product Details'),
-        backgroundColor: AppColors.primaryBlue,
-        foregroundColor: AppColors.white,
-        actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
-            onSelected: (value) {
-              switch (value) {
-                case 'report':
-                  _showReportProductDialog(context);
-                  break;
-                case 'share':
-                  _shareProduct(context);
-                  break;
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'report',
-                child: Row(
-                  children: [
-                    Icon(Icons.report, color: AppColors.error),
-                    SizedBox(width: AppSizes.spaceS),
-                    Text('Report Product'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'share',
-                child: Row(
-                  children: [
-                    Icon(Icons.share, color: AppColors.primaryBlue),
-                    SizedBox(width: AppSizes.spaceS),
-                    Text('Share Product'),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+    final content = Scaffold(
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -268,6 +227,49 @@ class ProductDetailPage extends ConsumerWidget {
           ],
         ),
       ),
+    );
+
+    return MainLayout(
+      currentIndex: -1, // Not a main navigation item
+      title: 'Product Details',
+      actions: [
+        PopupMenuButton<String>(
+          icon: const Icon(Icons.more_vert),
+          onSelected: (value) {
+            switch (value) {
+              case 'report':
+                _showReportProductDialog(context);
+                break;
+              case 'share':
+                _shareProduct(context);
+                break;
+            }
+          },
+          itemBuilder: (context) => [
+            const PopupMenuItem(
+              value: 'report',
+              child: Row(
+                children: [
+                  Icon(Icons.report, color: AppColors.error),
+                  SizedBox(width: AppSizes.spaceS),
+                  Text('Report Product'),
+                ],
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'share',
+              child: Row(
+                children: [
+                  Icon(Icons.share, color: AppColors.primaryBlue),
+                  SizedBox(width: AppSizes.spaceS),
+                  Text('Share Product'),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+      child: content,
     );
   }
 

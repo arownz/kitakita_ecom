@@ -5,6 +5,7 @@ import '../../../../shared/constants/app_colors.dart';
 import '../../../../shared/constants/app_text_styles.dart';
 import '../../../../shared/constants/app_sizes.dart';
 import '../../../../shared/utils/responsive_utils.dart';
+import '../../../../shared/layouts/main_layout.dart';
 import '../../../../core/router/app_router.dart';
 
 class ChatDetailPage extends ConsumerStatefulWidget {
@@ -105,12 +106,52 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
   Widget build(BuildContext context) {
     final isDesktop = ResponsiveUtils.isDesktop(context);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      appBar: isDesktop ? null : _buildAppBar(context),
-      body: isDesktop
-          ? _buildDesktopLayout(context)
-          : _buildMobileLayout(context),
+    final content = isDesktop
+        ? _buildDesktopLayout(context)
+        : _buildMobileLayout(context);
+
+    return MainLayout(
+      currentIndex: 2,
+      title: _contactName,
+      showAppBar: !isDesktop, // Only show app bar on mobile
+      actions: [
+        PopupMenuButton<String>(
+          icon: const Icon(Icons.more_vert),
+          onSelected: (value) {
+            switch (value) {
+              case 'report':
+                _showReportDialog(context);
+                break;
+              case 'block':
+                _showBlockUserDialog(context);
+                break;
+            }
+          },
+          itemBuilder: (context) => [
+            const PopupMenuItem(
+              value: 'report',
+              child: Row(
+                children: [
+                  Icon(Icons.report, color: AppColors.error),
+                  SizedBox(width: AppSizes.spaceS),
+                  Text('Report User'),
+                ],
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'block',
+              child: Row(
+                children: [
+                  Icon(Icons.block, color: AppColors.error),
+                  SizedBox(width: AppSizes.spaceS),
+                  Text('Block User'),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+      child: content,
     );
   }
 

@@ -7,6 +7,7 @@ import '../../../../shared/constants/app_sizes.dart';
 import '../../../../shared/utils/responsive_utils.dart';
 import '../../../../shared/providers/auth_provider.dart';
 import '../../../../shared/services/supabase_service.dart';
+import '../../../../shared/layouts/main_layout.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../shared/providers/theme_provider.dart';
 
@@ -285,41 +286,40 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-        backgroundColor: AppColors.primaryBlue,
-        foregroundColor: AppColors.white,
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: ResponsiveUtils.getScreenPadding(context),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: AppSizes.spaceL),
+    final content = _isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : SingleChildScrollView(
+            padding: ResponsiveUtils.getScreenPadding(context),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: AppSizes.spaceL),
 
-                  // Notification Settings
-                  _buildSectionHeader('Notifications'),
-                  _buildNotificationSettings(),
+                // Notification Settings
+                _buildSectionHeader('Notifications'),
+                _buildNotificationSettings(),
 
-                  const SizedBox(height: AppSizes.spaceXL),
+                const SizedBox(height: AppSizes.spaceXL),
 
-                  // App Settings
-                  _buildSectionHeader('App Settings'),
-                  _buildAppSettings(),
+                // App Settings
+                _buildSectionHeader('App Settings'),
+                _buildAppSettings(),
 
-                  const SizedBox(height: AppSizes.spaceXL),
+                const SizedBox(height: AppSizes.spaceXL),
 
-                  // Account Settings
-                  _buildSectionHeader('Account'),
-                  _buildAccountSettings(),
+                // Account Settings
+                _buildSectionHeader('Account'),
+                _buildAccountSettings(),
 
-                  const SizedBox(height: AppSizes.spaceXXL),
-                ],
-              ),
+                const SizedBox(height: AppSizes.spaceXXL),
+              ],
             ),
+          );
+
+    return MainLayout(
+      currentIndex: -1, // Accessed from profile
+      title: 'Settings',
+      child: content,
     );
   }
 

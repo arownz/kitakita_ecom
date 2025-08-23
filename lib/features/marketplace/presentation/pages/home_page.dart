@@ -6,6 +6,7 @@ import '../../../../shared/constants/app_colors.dart';
 import '../../../../shared/constants/app_text_styles.dart';
 import '../../../../shared/constants/app_sizes.dart';
 import '../../../../shared/utils/responsive_utils.dart';
+import '../../../../shared/layouts/main_layout.dart';
 
 import '../../../../core/router/app_router.dart';
 import '../providers/marketplace_providers.dart';
@@ -56,54 +57,21 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget build(BuildContext context) {
     final productsState = ref.watch(productsProvider);
     final categoriesAsync = ref.watch(categoriesProvider);
-    final isDesktop = ResponsiveUtils.isDesktop(context);
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          // Background
-          Container(color: const Color(0xFFF8F9FA)),
+    final content = Column(
+      children: [
+        // Top navigation bar with integrated search
+        _buildTopNavigation(context),
 
-          // Background with campus theme
-          Positioned.fill(
-            child: Opacity(
-              opacity: 0.05,
-              child: Image.asset(
-                'assets/images/campusbackground.png',
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
+        // Email verification banner
+        const EmailVerificationBanner(),
 
-          // Main content
-          SafeArea(
-            child: Column(
-              children: [
-                // Top navigation bar with integrated search
-                _buildTopNavigation(context),
-
-                // Email verification banner
-                const EmailVerificationBanner(),
-
-                // Main content area
-                Expanded(
-                  child: _buildMainContent(categoriesAsync, productsState),
-                ),
-              ],
-            ),
-          ),
-
-          // Mobile bottom navigation
-          if (!isDesktop)
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: _buildBottomNavigation(context),
-            ),
-        ],
-      ),
+        // Main content area
+        Expanded(child: _buildMainContent(categoriesAsync, productsState)),
+      ],
     );
+
+    return MainLayout(currentIndex: 0, title: 'Marketplace', child: content);
   }
 
   Widget _buildTopNavigation(BuildContext context) {
@@ -284,72 +252,6 @@ class _HomePageState extends ConsumerState<HomePage> {
     // TODO: Implement notifications dropdown
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Notifications dropdown coming soon!')),
-    );
-  }
-
-  Widget _buildBottomNavigation(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.transparent,
-          selectedItemColor: AppColors.primaryBlue,
-          unselectedItemColor: const Color(0xFF6C757D),
-          selectedFontSize: 12,
-          unselectedFontSize: 12,
-          iconSize: 24,
-          currentIndex: 0,
-          elevation: 0,
-          onTap: (index) {
-            switch (index) {
-              case 0:
-                // Already on home
-                break;
-              case 1:
-                context.go(AppRoutes.addProduct);
-                break;
-              case 2:
-                context.go(AppRoutes.favorites);
-                break;
-              case 3:
-                context.go(AppRoutes.profile);
-                break;
-            }
-          },
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.add_box_outlined),
-              activeIcon: Icon(Icons.add_box),
-              label: 'Sell',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.favorite_outline),
-              activeIcon: Icon(Icons.favorite),
-              label: 'Favorites',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
-              activeIcon: Icon(Icons.person),
-              label: 'Profile',
-            ),
-          ],
-        ),
-      ),
     );
   }
 

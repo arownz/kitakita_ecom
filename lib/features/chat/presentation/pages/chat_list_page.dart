@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../shared/constants/app_colors.dart';
 import '../../../../shared/constants/app_text_styles.dart';
 import '../../../../shared/constants/app_sizes.dart';
-// import '../../../../shared/utils/responsive_utils.dart';
+import '../../../../shared/layouts/main_layout.dart';
 import '../../../../core/router/app_router.dart';
 
 class ChatListPage extends ConsumerStatefulWidget {
@@ -39,59 +39,55 @@ class _ChatListPageState extends ConsumerState<ChatListPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Messages'),
-        backgroundColor: AppColors.primaryBlue,
-        foregroundColor: AppColors.white,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              // Implement search functionality
-            },
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Search bar
-          Container(
-            color: AppColors.primaryBlue,
-            padding: const EdgeInsets.all(AppSizes.paddingM),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(25),
-              ),
-              child: TextField(
-                controller: _searchController,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  hintText: 'Search conversations...',
-                  hintStyle: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.7),
-                  ),
-                  prefixIcon: Icon(
-                    Icons.search,
-                    color: Colors.white.withValues(alpha: 0.7),
-                  ),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: AppSizes.paddingM,
-                    vertical: AppSizes.paddingS,
-                  ),
+    final content = Column(
+      children: [
+        // Search bar
+        Container(
+          color: Colors.white,
+          padding: const EdgeInsets.all(24),
+          child: Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8F9FA),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(color: const Color(0xFFE9ECEF)),
+            ),
+            child: TextField(
+              controller: _searchController,
+              decoration: const InputDecoration(
+                hintText: 'Search conversations...',
+                hintStyle: TextStyle(
+                  color: Color(0xFF6C757D),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w400,
                 ),
+                prefixIcon: Icon(
+                  Icons.search,
+                  color: Color(0xFF6C757D),
+                  size: 20,
+                ),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
+              ),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w400,
+                color: Color(0xFF212529),
               ),
             ),
           ),
+        ),
 
-          // Chat list
-          Expanded(
+        // Chat list
+        Expanded(
+          child: Container(
+            color: Colors.white,
             child: _conversations.isEmpty
                 ? _buildEmptyState()
                 : ListView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
                     itemCount: _conversations.length,
                     itemBuilder: (context, index) {
                       final chat = _conversations[index];
@@ -99,8 +95,22 @@ class _ChatListPageState extends ConsumerState<ChatListPage> {
                     },
                   ),
           ),
-        ],
-      ),
+        ),
+      ],
+    );
+
+    return MainLayout(
+      currentIndex: 2,
+      title: 'Messages',
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.search),
+          onPressed: () {
+            // TODO: Implement search functionality
+          },
+        ),
+      ],
+      child: content,
     );
   }
 

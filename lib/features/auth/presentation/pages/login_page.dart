@@ -160,7 +160,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           ),
           child: IconButton(
             onPressed: () => context.go(AppRoutes.landing),
-            icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+            icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
             style: IconButton.styleFrom(foregroundColor: Colors.white),
           ),
         ),
