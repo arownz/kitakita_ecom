@@ -7,6 +7,7 @@ import '../../../../shared/constants/app_text_styles.dart';
 import '../../../../shared/utils/responsive_utils.dart';
 import '../../../../shared/providers/auth_provider.dart';
 import '../../../../core/router/app_router.dart';
+import 'package:flutter/foundation.dart';
 
 class RegisterPage extends ConsumerStatefulWidget {
   const RegisterPage({super.key});
@@ -52,8 +53,42 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             phoneNumber: _phoneController.text.trim(),
           );
 
-      if (success && mounted) {
-        context.go(AppRoutes.home);
+      if (!mounted) return;
+      if (success) {
+        if (kDebugMode) {
+          print('Registration successful, waiting for auth state...');
+        }
+
+        // Wait a bit for auth state to be fully updated
+        await Future.delayed(const Duration(milliseconds: 200));
+
+        if (!mounted) return;
+
+        // Check if we're already on the right page (router might have redirected us)
+        final currentRoute = GoRouterState.of(context).uri.toString();
+        if (kDebugMode) {
+          print('Current route after registration: $currentRoute');
+        }
+
+        // Only navigate if we're still on an auth page
+        if (currentRoute == AppRoutes.login ||
+            currentRoute == AppRoutes.register ||
+            currentRoute == AppRoutes.landing) {
+          if (kDebugMode) {
+            print('Still on auth page, navigating to home');
+          }
+          context.go(AppRoutes.home);
+        } else {
+          if (kDebugMode) {
+            print('Already redirected by router, staying put');
+          }
+        }
+      } else {
+        if (kDebugMode) {
+          print('Registration failed, staying on register page');
+        }
+        // Registration failed - stay on register page and show error
+        // Error is already displayed via authState.error
       }
     }
   }
@@ -208,7 +243,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Image.asset(
-              'assets/images/kitakita_logo.png',
+              'assets/images/craiyon_190355_image.png',
               fit: BoxFit.contain,
             ),
           ),

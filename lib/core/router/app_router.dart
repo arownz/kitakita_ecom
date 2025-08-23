@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,7 +10,6 @@ import '../../features/marketplace/presentation/pages/home_page.dart';
 import '../../features/marketplace/presentation/pages/product_detail_page.dart';
 import '../../features/marketplace/presentation/pages/add_product_page.dart';
 import '../../features/notifications/presentation/pages/notifications_page.dart';
-import '../../features/chat/presentation/pages/chat_list_page.dart';
 import '../../features/chat/presentation/pages/chat_detail_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/profile/presentation/pages/my_products_page.dart';
@@ -41,25 +41,62 @@ class AppRouter {
     return GoRouter(
       initialLocation: AppRoutes.landing,
       redirect: (context, state) {
-        final isLoggedIn = ref.read(isLoggedInProvider);
-        final userRole = ref.read(userRoleProvider);
-        final isLoggingIn =
-            state.matchedLocation == AppRoutes.login ||
-            state.matchedLocation == AppRoutes.register ||
-            state.matchedLocation == AppRoutes.landing;
+        final authState = ref.read(authProvider);
+        final isLoggedIn = authState.user != null;
+        final userRole = authState.userRole;
+        final hasError = authState.error != null;
+        final isLoading = authState.isLoading;
+        final currentLocation = state.matchedLocation;
+        final isAuthPage =
+            currentLocation == AppRoutes.login ||
+            currentLocation == AppRoutes.register ||
+            currentLocation == AppRoutes.landing;
 
-        // If not logged in and trying to access protected routes
-        if (!isLoggedIn && !isLoggingIn) {
-          return AppRoutes.landing;
+        if (kDebugMode) {
+          print(
+            'Router redirect: isLoggedIn=$isLoggedIn, userRole=$userRole, location=$currentLocation, hasError=$hasError, isLoading=$isLoading',
+          );
         }
 
-        // If logged in and on auth pages, redirect to appropriate home
-        if (isLoggedIn && isLoggingIn) {
+        // Don't redirect if auth is loading
+        if (isLoading) {
+          if (kDebugMode) {
+            print('Auth is loading, no redirect');
+          }
+          return null;
+        }
+
+        // If logged in and on any auth page, redirect to appropriate home
+        if (isLoggedIn && isAuthPage) {
           if (userRole == UserRole.admin) {
+            if (kDebugMode) {
+              print('Admin logged in, redirecting to admin dashboard');
+            }
             return AppRoutes.adminDashboard;
           } else {
+            if (kDebugMode) {
+              print('Student logged in, redirecting to home');
+            }
             return AppRoutes.home;
           }
+        }
+
+        // Don't redirect from login/register pages when there's an auth error
+        if (hasError &&
+            (currentLocation == AppRoutes.login ||
+                currentLocation == AppRoutes.register)) {
+          if (kDebugMode) {
+            print('Auth error on auth page, staying put');
+            return null;
+          }
+        }
+
+        // If not logged in and trying to access protected routes
+        if (!isLoggedIn && !isAuthPage) {
+          if (kDebugMode) {
+            print('Not logged in, redirecting to landing');
+          }
+          return AppRoutes.landing;
         }
 
         // Admin trying to access student routes
@@ -71,19 +108,32 @@ class AppRouter {
           ];
 
           if (protectedStudentRoutes.any(
-            (route) => state.matchedLocation.startsWith(route.split(':')[0]),
+            (route) => currentLocation.startsWith(route.split(':')[0]),
           )) {
+            if (kDebugMode) {
+              print(
+                'Admin trying to access student route, redirecting to admin dashboard',
+              );
+            }
             return AppRoutes.adminDashboard;
           }
         }
 
         // Student trying to access admin routes
         if (isLoggedIn && userRole == UserRole.student) {
-          if (state.matchedLocation.startsWith('/admin')) {
+          if (currentLocation.startsWith('/admin')) {
+            if (kDebugMode) {
+              print(
+                'Student trying to access admin route, redirecting to home',
+              );
+            }
             return AppRoutes.home;
           }
         }
 
+        if (kDebugMode) {
+          print('No redirect needed');
+        }
         return null; // No redirect needed
       },
       routes: [
@@ -131,7 +181,7 @@ class AppRouter {
         GoRoute(
           path: AppRoutes.chatList,
           name: 'chatList',
-          builder: (context, state) => const ChatListPage(),
+          builder: (context, state) => const ChatDetailPage(chatId: 'default'),
         ),
         GoRoute(
           path: AppRoutes.chatDetail,
@@ -195,8 +245,14 @@ class AppRouter {
 
 // Provider for the router - reactive to auth state changes
 final routerProvider = Provider<GoRouter>((ref) {
-  // Watch auth state to make router reactive
-  ref.watch(authProvider);
+  // Watch auth state changes
+  final authState = ref.watch(authProvider);
+  final isLoggedIn = authState.user != null;
+  final userRole = authState.userRole;
+
+  if (kDebugMode) {
+    print('Router provider rebuilding: isLoggedIn=$isLoggedIn, role=$userRole');
+  }
 
   return AppRouter.router(ref);
 });

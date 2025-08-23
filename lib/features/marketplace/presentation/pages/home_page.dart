@@ -121,12 +121,15 @@ class _HomePageState extends ConsumerState<HomePage> {
               decoration: const InputDecoration(
                 hintText: 'Search for products...',
                 hintStyle: TextStyle(
-                  color: Color(0xFF6C757D),
+                  color: AppColors.primaryBlue,
                   fontSize: 16,
                   fontWeight: FontWeight.w400,
                 ),
                 border: InputBorder.none,
-                contentPadding: EdgeInsets.zero,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
+                ),
               ),
               style: const TextStyle(
                 fontSize: 16,
@@ -159,28 +162,13 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget _buildActionButtons(BuildContext context) {
     return Row(
       children: [
-        // Profile button
-        _buildActionButton(
-          icon: Icons.person_outline,
-          onTap: () => context.go(AppRoutes.profile),
-        ),
-
-        const SizedBox(width: 16),
-
         // Chat button
         _buildActionButton(
           icon: Icons.chat_bubble_outline,
-          onTap: () => context.go(AppRoutes.chatList),
+          onTap: () => context.go(AppRoutes.chatDetail),
         ),
 
-        const SizedBox(width: 16),
-
-        // Notifications button
-        _buildActionButton(
-          icon: Icons.notifications_outlined,
-          onTap: () => _showNotificationsDropdown(context),
-          showBadge: true, // TODO: Connect to actual notification count
-        ),
+        // const SizedBox(width: 16),
       ],
     );
   }

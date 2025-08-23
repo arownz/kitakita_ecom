@@ -481,6 +481,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               Navigator.of(context).pop();
               await ref.read(authProvider.notifier).signOut();
               if (context.mounted) {
+                // Use pushReplacement to ensure we can't go back
                 context.go(AppRoutes.landing);
               }
             },

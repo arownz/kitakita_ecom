@@ -68,6 +68,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               TextField(
                 controller: currentController,
                 obscureText: true,
+                style: const TextStyle(color: AppColors.primaryBlue),
                 decoration: const InputDecoration(
                   labelText: 'Current Password',
                   border: OutlineInputBorder(),
@@ -77,6 +78,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               TextField(
                 controller: newController,
                 obscureText: true,
+                style: const TextStyle(color: AppColors.primaryBlue),
                 decoration: const InputDecoration(
                   labelText: 'New Password',
                   border: OutlineInputBorder(),
@@ -86,6 +88,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               TextField(
                 controller: confirmController,
                 obscureText: true,
+                style: const TextStyle(color: AppColors.primaryBlue),
                 decoration: const InputDecoration(
                   labelText: 'Confirm New Password',
                   border: OutlineInputBorder(),

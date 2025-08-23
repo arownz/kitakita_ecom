@@ -250,15 +250,19 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
             child: Row(
               children: [
                 if (_isSidebarExpanded) ...[
-                  const Text(
-                    'Navigation',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF495057),
+                  const Expanded(
+                    child: Text(
+                      'Navigation',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF495057),
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const Spacer(),
+                ] else ...[
+                  const Expanded(child: SizedBox()),
                 ],
                 IconButton(
                   icon: Icon(

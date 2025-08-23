@@ -50,32 +50,60 @@ class AuthNotifier extends StateNotifier<AuthState> {
   void _initializeAuth() {
     // Listen to auth state changes
     SupabaseService.authStateChanges.listen((authState) {
+      _logger.i('Auth state changed: ${authState.event}');
       if (authState.event == AuthChangeEvent.signedIn) {
+        _logger.i('User signed in: ${authState.session?.user.email}');
         _setUser(authState.session?.user);
       } else if (authState.event == AuthChangeEvent.signedOut) {
+        _logger.i('User signed out event received');
         _clearUser();
+      } else if (authState.event == AuthChangeEvent.tokenRefreshed) {
+        _logger.i('Token refreshed');
+        if (authState.session?.user != null) {
+          _setUser(authState.session?.user);
+        }
       }
     });
 
     // Set initial user if already logged in
     final currentUser = SupabaseService.currentUser;
     if (currentUser != null) {
+      _logger.i('Initial user found: ${currentUser.email}');
       _setUser(currentUser);
     }
   }
 
   Future<void> _setUser(User? user) async {
     if (user != null) {
-      // Ensure the user's profile exists (first sign-in, etc.)
-      await _ensureUserProfile(user);
+      _logger.i(
+        'Setting user: ${user.email}, emailConfirmedAt: ${user.emailConfirmedAt}',
+      );
 
-      final userRole = await _getUserRole(user.id);
+      // Set user state immediately to prevent routing issues
       final isVerified = user.emailConfirmedAt != null;
       state = state.copyWith(
         user: user,
-        userRole: userRole,
+        userRole: UserRole.student, // Default to student
         isEmailVerified: isVerified,
       );
+
+      // Then handle profile and role asynchronously
+      try {
+        await _ensureUserProfile(user);
+        final userRole = await _getUserRole(user.id);
+
+        // Update state with proper role
+        state = state.copyWith(
+          user: user,
+          userRole: userRole,
+          isEmailVerified: isVerified,
+        );
+
+        _logger.i('User state updated: role=$userRole, verified=$isVerified');
+      } catch (e) {
+        _logger.w('Error setting user details: $e');
+        // Keep the user logged in even if profile/role loading fails
+      }
     }
   }
 
@@ -114,7 +142,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   void _clearUser() {
-    state = state.copyWith(user: null, userRole: null, isEmailVerified: false);
+    _logger.i('Clearing user state');
+    state = const AuthState(); // Reset to completely clean state
   }
 
   Future<UserRole?> _getUserRole(String userId) async {
@@ -226,15 +255,22 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
+      _logger.i('Attempting sign in for: $email');
       final response = await SupabaseService.signIn(
         email: email,
         password: password,
       );
 
       if (response.user != null) {
+        _logger.i('Sign in successful for: ${response.user!.email}');
+
+        // Set user state immediately to ensure router can react
+        await _setUser(response.user);
+
         state = state.copyWith(isLoading: false);
         return true;
       } else {
+        _logger.w('Sign in failed: no user in response');
         state = state.copyWith(
           isLoading: false,
           error: 'Login failed. Please check your credentials.',
@@ -242,6 +278,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         return false;
       }
     } catch (e) {
+      _logger.e('Sign in error: $e');
       state = state.copyWith(
         isLoading: false,
         error: _humanizeAuthError(e.toString()),
@@ -251,12 +288,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> signOut() async {
+    _logger.i('Starting sign out process');
     state = state.copyWith(isLoading: true);
     try {
       await SupabaseService.signOut();
+      _logger.i('Supabase sign out completed');
       _clearUser();
-      state = state.copyWith(isLoading: false);
+      _logger.i('User state cleared');
     } catch (e) {
+      _logger.e('Sign out error: $e');
       state = state.copyWith(
         isLoading: false,
         error: _humanizeAuthError(e.toString()),
@@ -315,6 +355,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   void clearError() {
     state = state.copyWith(error: null);
+  }
+
+  void clearErrorOnNavigation() {
+    // Clear error when user navigates away from auth pages
+    if (state.error != null) {
+      state = state.copyWith(error: null);
+    }
   }
 
   Future<bool> resendVerificationEmail() async {
