@@ -528,7 +528,7 @@ class _AddProductPageState extends ConsumerState<AddProductPage> {
       final userId = ref.read(currentUserProvider)?.id ?? '';
       final List<String> uploadedUrls = [];
       if (_selectedImages.isNotEmpty) {
-        final bucket = SupabaseService.storage.from('product_images');
+        final bucket = SupabaseService.storage.from('product-images');
         final uuid = const Uuid();
         for (int i = 0; i < _selectedImages.length; i++) {
           final imageBytes = await _selectedImages[i].readAsBytes();

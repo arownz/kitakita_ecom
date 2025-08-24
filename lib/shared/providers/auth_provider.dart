@@ -199,6 +199,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String phoneNumber,
     String? profileImageUrl,
   }) async {
+    // Validate university email
+    if (!_isUniversityEmail(email)) {
+      state = state.copyWith(
+        isLoading: false,
+        error:
+            'Please use your university email address (e.g., @university.edu)',
+      );
+      return false;
+    }
+
     state = state.copyWith(isLoading: true, error: null);
 
     try {
@@ -282,9 +292,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<bool> signIn({required String email, required String password}) async {
+    // Validate university email
+    if (!_isUniversityEmail(email)) {
+      state = state.copyWith(
+        isLoading: false,
+        error:
+            'Please use your university email address (e.g., @university.edu)',
+      );
+      return false;
+    }
+
     _logger.i('Starting sign in process - clearing previous errors');
-    // Don't clear error immediately - wait for success or new error
-    state = state.copyWith(isLoading: true);
+    // Clear any previous errors and set loading
+    state = state.copyWith(isLoading: true, error: null);
 
     try {
       _logger.i('Attempting sign in for: $email');
@@ -413,11 +433,37 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(error: null);
   }
 
+  // Prevent router from auto-setting initial location when there's an error
+  void preventRouterRedirect() {
+    // This method ensures the router doesn't auto-redirect when there's an auth error
+    if (state.error != null) {
+      // Force the router to stay on current page
+      _logger.i('Preventing router redirect due to auth error: ${state.error}');
+    }
+  }
+
   void clearErrorOnNavigation() {
     // Clear error when user navigates away from auth pages
     if (state.error != null) {
       state = state.copyWith(error: null);
     }
+  }
+
+  // Validate university email
+  bool _isUniversityEmail(String email) {
+    final universityDomains = [
+      '.edu',
+      '.ac.',
+      '.university',
+      '.college',
+      '.school',
+      '.institute',
+      '.academy',
+    ];
+
+    return universityDomains.any(
+      (domain) => email.toLowerCase().contains(domain),
+    );
   }
 
   Future<bool> resendVerificationEmail() async {

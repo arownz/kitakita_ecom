@@ -1,0 +1,30 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "kitakita_ecom (debug mode)",
+        "type": "dart",
+        "request": "launch",
+        "flutterMode": "debug",
+        "args": [
+          "-d",
+          "chrome",
+          "--web-port=3000",
+          "--dart-define=SUPABASE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsbmJ2b2x0cHhxZ3hoY2txdXdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwMDg5NDMsImV4cCI6MjA3MTU4NDk0M30.K17_vkfIxSjuSfURnnz4Bxy7UZ4GHB-ZB5JU9bkwmOw"
+        ]
+      },
+      {
+        "name": "kitakita_ecom (profile mode)",
+        "type": "dart",
+        "request": "launch",
+        "flutterMode": "profile"
+      },
+      {
+        "name": "kitakita_ecom (release mode)",
+        "type": "dart",
+        "request": "launch",
+        "flutterMode": "release"
+      }
+    ]
+  }
+  

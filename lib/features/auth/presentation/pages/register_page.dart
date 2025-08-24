@@ -203,7 +203,11 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
           ),
           child: IconButton(
-            onPressed: () => context.go(AppRoutes.landing),
+            onPressed: () {
+              // Clear any auth errors before navigating back
+              ref.read(authProvider.notifier).clearError();
+              context.go(AppRoutes.landing);
+            },
             icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
             style: IconButton.styleFrom(foregroundColor: Colors.white),
           ),
@@ -368,6 +372,13 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
                 ).hasMatch(value)) {
                   return 'Please enter a valid email';
+                }
+                // Check if it's a university email
+                if (!value.toLowerCase().contains('.edu') &&
+                    !value.toLowerCase().contains('.ac.') &&
+                    !value.toLowerCase().contains('.university') &&
+                    !value.toLowerCase().contains('.college')) {
+                  return 'Please use your university email address';
                 }
                 return null;
               },
@@ -617,14 +628,17 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               color: Colors.white.withValues(alpha: 0.8),
             ),
           ),
-          GestureDetector(
-            onTap: () => context.go(AppRoutes.login),
-            child: Text(
+          MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: GestureDetector(
+              onTap: () => context.go(AppRoutes.login),
+              child: Text(
               'Sign In',
               style: AppTextStyles.bodyMedium.copyWith(
                 color: AppColors.primaryYellow,
                 fontWeight: FontWeight.w700,
                 decoration: TextDecoration.underline,
+                ),
               ),
             ),
           ),
