@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../../shared/constants/app_colors.dart';
 import '../../../../shared/constants/app_text_styles.dart';
 import '../../../../shared/constants/app_sizes.dart';
@@ -176,16 +177,22 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           Positioned(
             bottom: 0,
             right: 0,
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: const BoxDecoration(
-                color: AppColors.primaryYellow,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.camera_alt,
-                color: AppColors.primaryBlue,
-                size: 20,
+            child: GestureDetector(
+              onTap: _pickProfileImage,
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: const BoxDecoration(
+                    color: AppColors.primaryYellow,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.camera_alt,
+                    color: AppColors.primaryBlue,
+                    size: 20,
+                  ),
+                ),
               ),
             ),
           ),
@@ -379,37 +386,105 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     required String subtitle,
     required VoidCallback onTap,
   }) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: AppColors.lightGray.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: AppColors.primaryBlue.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: AppColors.lightGray.withValues(alpha: 0.3),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: ListTile(
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.primaryBlue.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: AppColors.primaryBlue),
           ),
-          child: Icon(icon, color: AppColors.primaryBlue),
+          title: Text(
+            title,
+            style: AppTextStyles.bodyLarge.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          subtitle: Text(
+            subtitle,
+            style: AppTextStyles.bodySmall.copyWith(color: AppColors.textGray),
+          ),
+          trailing: const Icon(
+            Icons.arrow_forward_rounded,
+            size: 16,
+            color: AppColors.textGray,
+          ),
+          onTap: onTap,
         ),
-        title: Text(
-          title,
-          style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.w600),
-        ),
-        subtitle: Text(
-          subtitle,
-          style: AppTextStyles.bodySmall.copyWith(color: AppColors.textGray),
-        ),
-        trailing: const Icon(
-          Icons.arrow_forward_rounded,
-          size: 16,
-          color: AppColors.textGray,
-        ),
-        onTap: onTap,
       ),
     );
+  }
+
+  Future<void> _pickProfileImage() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 80,
+      );
+
+      if (image != null) {
+        // Upload image to Supabase Storage
+        final user = ref.read(currentUserProvider);
+        if (user != null) {
+          final fileName =
+              'profile_${user.id}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+          final filePath = 'profile-images/$fileName';
+
+          final fileBytes = await image.readAsBytes();
+          await SupabaseService.storage
+              .from('profile-images')
+              .uploadBinary(filePath, fileBytes);
+
+          // Get public URL
+          final imageUrl = SupabaseService.storage
+              .from('profile-images')
+              .getPublicUrl(filePath);
+
+          // Update user metadata with new profile image
+          await SupabaseService.client.auth.updateUser(
+            UserAttributes(data: {'profile_image_url': imageUrl}),
+          );
+
+          // Update user_profiles table
+          await SupabaseService.from(
+            'user_profiles',
+          ).update({'profile_image_url': imageUrl}).eq('user_id', user.id);
+
+          // Refresh the page to show new image
+          setState(() {});
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Profile picture updated successfully'),
+                backgroundColor: AppColors.success,
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update profile picture: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
   }
 
   void _saveProfile() async {

@@ -74,6 +74,22 @@ class AppRouter {
           return currentLocation;
         }
 
+        // CRITICAL: If on login page, NEVER redirect to landing (regardless of error state)
+        if (currentLocation == AppRoutes.login) {
+          if (kDebugMode) {
+            print('🚨 ON LOGIN PAGE - NO REDIRECT TO LANDING ALLOWED');
+          }
+          return null; // Stay on login page
+        }
+
+        // CRITICAL: If on register page, NEVER redirect to landing (regardless of error state)
+        if (currentLocation == AppRoutes.register) {
+          if (kDebugMode) {
+            print('🚨 ON REGISTER PAGE - NO REDIRECT TO LANDING ALLOWED');
+          }
+          return null; // Stay on register page
+        }
+
         // If logged in and on any auth page, redirect to appropriate home
         if (isLoggedIn) {
           if (currentLocation == AppRoutes.login ||
@@ -116,6 +132,17 @@ class AppRouter {
             }
             return AppRoutes.landing;
           }
+        }
+
+        // CRITICAL: If on any auth page and not logged in, NEVER redirect
+        if (!isLoggedIn &&
+            (currentLocation == AppRoutes.login ||
+                currentLocation == AppRoutes.register ||
+                currentLocation == AppRoutes.landing)) {
+          if (kDebugMode) {
+            print('🚨 ON AUTH PAGE AND NOT LOGGED IN - NO REDIRECT ALLOWED');
+          }
+          return null; // Stay on current auth page
         }
 
         // Admin trying to access student routes

@@ -23,7 +23,6 @@ class _EmailVerificationBannerState
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
-    final isEmailVerified = ref.watch(isEmailVerifiedProvider);
     final isLoggedIn = ref.watch(isLoggedInProvider);
     final currentUserEmail = authState.user?.email;
 
@@ -35,9 +34,12 @@ class _EmailVerificationBannerState
       }
     }
 
-    // Don't show banner if user is not logged in, email is already verified, or dismissed (and not permanent)
+    // Check if user is actually verified by looking at the user's email confirmation
+    final isActuallyVerified = authState.user?.emailConfirmedAt != null;
+
+    // Don't show banner if user is not logged in, email is actually verified, or dismissed (and not permanent)
     if (!isLoggedIn ||
-        isEmailVerified ||
+        isActuallyVerified ||
         (_isDismissed && !widget.isPermanent)) {
       return const SizedBox.shrink();
     }
@@ -173,21 +175,32 @@ class _EmailVerificationBannerState
   }
 
   void _resendVerificationEmail(BuildContext context, WidgetRef ref) async {
-    final success = await ref
-        .read(authProvider.notifier)
-        .resendVerificationEmail();
+    try {
+      final success = await ref
+          .read(authProvider.notifier)
+          .resendVerificationEmail();
 
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            success
-                ? 'Verification email sent! Please check your inbox.'
-                : 'Failed to send verification email. Please try again.',
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              success
+                  ? 'Verification email sent! Please check your inbox.'
+                  : 'Failed to send verification email. Please try again.',
+            ),
+            backgroundColor: success ? AppColors.success : AppColors.error,
           ),
-          backgroundColor: success ? AppColors.success : AppColors.error,
-        ),
-      );
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
     }
   }
 

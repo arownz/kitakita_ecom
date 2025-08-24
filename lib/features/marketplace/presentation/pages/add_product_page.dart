@@ -55,6 +55,103 @@ class _AddProductPageState extends ConsumerState<AddProductPage> {
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authProvider);
+
+    // Check if user is actually verified by looking at the user's email confirmation
+    final isActuallyVerified = authState.user?.emailConfirmedAt != null;
+
+    // Check if user is verified
+    if (!isActuallyVerified) {
+      return MainLayout(
+        currentIndex: 1,
+        title: 'Sell Product',
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.email_outlined,
+                size: 80,
+                color: AppColors.primaryBlue.withValues(alpha: 0.6),
+              ),
+              const SizedBox(height: AppSizes.spaceL),
+              Text(
+                'Email Verification Required',
+                style: AppTextStyles.h2.copyWith(
+                  color: AppColors.primaryBlue,
+                  fontWeight: FontWeight.w700,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSizes.spaceM),
+              Text(
+                'To sell products and ensure marketplace authenticity, please verify your email address first.',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textGray,
+                  fontSize: 16,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSizes.spaceL),
+              Container(
+                padding: const EdgeInsets.all(AppSizes.paddingL),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryYellow.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: AppColors.primaryYellow.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      'Check your email inbox for the verification link',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primaryBlue,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: AppSizes.spaceM),
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        final success = await ref
+                            .read(authProvider.notifier)
+                            .resendVerificationEmail();
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                success
+                                    ? 'Verification email sent!'
+                                    : 'Failed to send email. Please try again.',
+                              ),
+                              backgroundColor: success
+                                  ? AppColors.success
+                                  : AppColors.error,
+                            ),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.email_outlined),
+                      label: const Text('Resend Verification Email'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryBlue,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     final categoriesAsync = ref.watch(categoriesProvider);
 
     final content = categoriesAsync.when(
@@ -65,7 +162,7 @@ class _AddProductPageState extends ConsumerState<AddProductPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.error, size: 64, color: AppColors.error),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSizes.spaceM),
             Text('Failed to load categories: $error'),
             ElevatedButton(
               onPressed: () => ref.refresh(categoriesProvider),

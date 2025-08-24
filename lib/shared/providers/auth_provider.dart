@@ -337,9 +337,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWith(
         isLoading: false,
         error: humanizedError,
-        user: null, // Ensure user is null on error
-        userRole: null,
-        isEmailVerified: false,
+        // Don't clear user on error - let the router handle it
+        // user: null, // Ensure user is null on error
+        // userRole: null,
+        // isEmailVerified: false,
       );
 
       _logger.i(

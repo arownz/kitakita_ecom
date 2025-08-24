@@ -262,7 +262,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
                     ),
                   ),
                 ] else ...[
-                  const Expanded(child: SizedBox()),
+                  const SizedBox(width: 40), // Fixed width instead of Expanded
                 ],
                 IconButton(
                   icon: Icon(
