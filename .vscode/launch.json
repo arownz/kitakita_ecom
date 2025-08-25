@@ -9,7 +9,7 @@
             "args": [
                 "-d",
                 "chrome",
-                "--web-port=8080",
+                "--web-port=3000",
                 "--dart-define=SUPABASE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsbmJ2b2x0cHhxZ3hoY2txdXdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwMDg5NDMsImV4cCI6MjA3MTU4NDk0M30.K17_vkfIxSjuSfURnnz4Bxy7UZ4GHB-ZB5JU9bkwmOw"
             ]
         },

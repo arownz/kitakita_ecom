@@ -39,42 +39,41 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           );
 
       if (!mounted) return;
+
+      // Only navigate if login was truly successful AND no errors
       if (success) {
-        if (kDebugMode) {
-          print('Login successful, waiting for auth state...');
-        }
+        final authState = ref.read(authProvider);
 
-        // Wait a bit for auth state to be fully updated
-        await Future.delayed(const Duration(milliseconds: 200));
-
-        if (!mounted) return;
-
-        // Check if we're already on the right page (router might have redirected us)
-        final currentRoute = GoRouterState.of(context).uri.toString();
-        if (kDebugMode) {
-          print('Current route after login: $currentRoute');
-        }
-
-        // Only navigate if we're still on an auth page
-        if (currentRoute == AppRoutes.login ||
-            currentRoute == AppRoutes.register ||
-            currentRoute == AppRoutes.landing) {
-          if (kDebugMode) {
-            print('Still on auth page, navigating to home');
+        // Double check that we actually have a user and no errors
+        if (authState.user != null && authState.error == null) {
+          // Check user role and navigate accordingly
+          final userRole = authState.userRole;
+          if (userRole == UserRole.admin) {
+            if (kDebugMode) {
+              print('Admin login successful, navigating to admin dashboard');
+            }
+            context.go(AppRoutes.adminDashboard);
+          } else {
+            if (kDebugMode) {
+              print('Student login successful, navigating to home');
+            }
+            context.go(AppRoutes.home);
           }
-          context.go(AppRoutes.home);
         } else {
           if (kDebugMode) {
-            print('Already redirected by router, staying put');
+            print(
+              'Login success but user/error state inconsistent - staying on login',
+            );
           }
+          // Login succeeded but state is inconsistent - stay on login page
         }
       } else {
         if (kDebugMode) {
-          print('LOGIN FAILED - STAYING ON LOGIN PAGE - NO NAVIGATION');
+          print('LOGIN FAILED - STAYING ON LOGIN PAGE');
         }
-        // Login failed - stay on login page and show error
-        // Error is already displayed via authState.error
-        // CRITICAL: Do not call any navigation methods here
+        // Login failed - error is displayed via authState.error
+        // Do NOT navigate anywhere - stay on login page
+        // Error message will be shown in the UI automatically
       }
     }
   }

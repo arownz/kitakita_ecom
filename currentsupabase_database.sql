@@ -399,9 +399,67 @@ CREATE TRIGGER update_products_updated_at BEFORE UPDATE ON public.products
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-    INSERT INTO public.user_profiles (user_id, email, role)
-    VALUES (NEW.id, NEW.email, 'student');
+    INSERT INTO public.user_profiles (user_id, email, role, is_verified)
+    VALUES (NEW.id, NEW.email, 'student', false);
     RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to confirm user email (bypass Supabase email confirmation)
+CREATE OR REPLACE FUNCTION confirm_user_email(user_email TEXT)
+RETURNS BOOLEAN AS $$
+DECLARE
+    user_record auth.users%ROWTYPE;
+BEGIN
+    -- Find the user by email in auth.users
+    SELECT * INTO user_record 
+    FROM auth.users 
+    WHERE email = user_email;
+    
+    IF user_record.id IS NULL THEN
+        RETURN FALSE;
+    END IF;
+    
+    -- Update the user's email confirmation status in auth.users
+    UPDATE auth.users 
+    SET email_confirmed_at = NOW(),
+        updated_at = NOW()
+    WHERE id = user_record.id;
+    
+    -- Also update our own user_profiles table
+    UPDATE public.user_profiles 
+    SET is_verified = true,
+        updated_at = NOW()
+    WHERE user_id = user_record.id;
+    
+    RETURN TRUE;
+EXCEPTION
+    WHEN OTHERS THEN
+        RETURN FALSE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to send verification email 
+CREATE OR REPLACE FUNCTION send_verification_email(user_email TEXT)
+RETURNS BOOLEAN AS $$
+DECLARE
+    user_record auth.users%ROWTYPE;
+BEGIN
+    -- Find the user by email
+    SELECT * INTO user_record 
+    FROM auth.users 
+    WHERE email = user_email;
+    
+    IF user_record.id IS NULL THEN
+        RETURN FALSE;
+    END IF;
+    
+    -- For now, just return true - Supabase will handle email sending
+    -- This function can be expanded to use custom email logic if needed
+    RETURN TRUE;
+EXCEPTION
+    WHEN OTHERS THEN
+        RETURN FALSE;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 

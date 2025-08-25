@@ -210,7 +210,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             label: 'First Name',
             icon: Icons.person,
             enabled: _isEditing,
-            // The text color will be set to black in _buildTextField, not here.
           ),
           const SizedBox(height: AppSizes.spaceM),
 
@@ -263,14 +262,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       enabled: enabled,
       keyboardType: keyboardType,
       style: AppTextStyles.bodyMedium.copyWith(
-        color: enabled ? AppColors.primaryBlue : AppColors.textGray,
+        color: enabled ? AppColors.primaryBlue : AppColors.primaryBlue,
       ),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: AppTextStyles.inputLabel,
+        labelStyle: AppTextStyles.inputLabel.copyWith(
+          color: enabled ? AppColors.primaryBlue : AppColors.primaryBlue,
+        ),
         prefixIcon: Icon(
           icon,
-          color: enabled ? AppColors.primaryBlue : AppColors.textGray,
+          color: enabled ? AppColors.primaryBlue : AppColors.primaryBlue,
         ),
         filled: true,
         fillColor: enabled

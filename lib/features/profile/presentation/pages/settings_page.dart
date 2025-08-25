@@ -8,6 +8,7 @@ import '../../../../shared/utils/responsive_utils.dart';
 import '../../../../shared/providers/auth_provider.dart';
 import '../../../../shared/services/supabase_service.dart';
 import '../../../../shared/layouts/main_layout.dart';
+import '../../../../shared/widgets/verification_guard.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../shared/providers/theme_provider.dart';
 
@@ -104,8 +105,20 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           ),
           ElevatedButton(
             onPressed: () async {
+              // Check if email is verified before updating password
+              if (!await checkEmailVerificationAndPrompt(
+                context,
+                ref,
+                feature: 'Update Password',
+                description:
+                    'Email verification is required to update your password. This helps protect your account security.',
+              )) {
+                return;
+              }
+
               if (newController.text.trim().length < 6 ||
                   newController.text.trim() != confirmController.text.trim()) {
+                if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Passwords do not match or too short'),
@@ -120,8 +133,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 );
                 if (!context.mounted) return;
                 Navigator.of(context).pop();
-                if (!mounted) return;
-                ScaffoldMessenger.of(this.context).showSnackBar(
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Password changed successfully'),
                     backgroundColor: AppColors.success,
@@ -129,7 +142,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 );
               } catch (e) {
                 if (!context.mounted) return;
-                ScaffoldMessenger.of(this.context).showSnackBar(
+                ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('Failed to change password: $e'),
                     backgroundColor: AppColors.error,

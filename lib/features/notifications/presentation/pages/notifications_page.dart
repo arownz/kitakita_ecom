@@ -5,6 +5,8 @@ import '../../../../shared/constants/app_text_styles.dart';
 import '../../../../shared/constants/app_sizes.dart';
 import '../../../../shared/utils/responsive_utils.dart';
 import '../../../../shared/layouts/main_layout.dart';
+import '../providers/notification_providers.dart';
+import '../../domain/models/notification_models.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class NotificationsPage extends ConsumerStatefulWidget {
@@ -41,64 +43,93 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
     await prefs.setBool(key, value);
   }
 
-  final List<NotificationItem> _notifications = [
-    NotificationItem(
-      id: '1',
-      title: 'Welcome to KitaKita!',
-      message:
-          'Start buying and selling with fellow students. Complete your profile to get started.',
-      type: NotificationType.system,
-      timestamp: DateTime.now().subtract(const Duration(days: 3)),
-      isRead: true,
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
-    final unreadCount = _notifications.where((n) => !n.isRead).length;
+    final notificationsAsync = ref.watch(notificationsProvider);
 
-    final content = _notifications.isEmpty
-        ? _buildEmptyState()
-        : ListView.builder(
-            padding: EdgeInsets.all(
-              ResponsiveUtils.isMobile(context)
-                  ? AppSizes.paddingM
-                  : AppSizes.paddingL,
-            ),
-            itemCount: _notifications.length,
-            itemBuilder: (context, index) {
-              final notification = _notifications[index];
-              return _buildNotificationItem(notification, index);
-            },
-          );
+    return notificationsAsync.when(
+      data: (notifications) {
+        final unreadCount = notifications.where((n) => !n.isRead).length;
 
-    return MainLayout(
-      currentIndex: -1, // Not a main navigation item
-      title: unreadCount > 0 
-          ? 'Notifications ($unreadCount unread)'
-          : 'Notifications',
-      actions: [
-        if (unreadCount > 0)
-          TextButton(
-            onPressed: _markAllAsRead,
-            child: Text(
-              'Mark all read',
-              style: TextStyle(
-                color: AppColors.primaryYellow,
-                fontWeight: FontWeight.w600,
+        final content = notifications.isEmpty
+            ? _buildEmptyState()
+            : ListView.builder(
+                padding: EdgeInsets.all(
+                  ResponsiveUtils.isMobile(context)
+                      ? AppSizes.paddingM
+                      : AppSizes.paddingL,
+                ),
+                itemCount: notifications.length,
+                itemBuilder: (context, index) {
+                  final notification = notifications[index];
+                  return _buildNotificationItem(notification, index);
+                },
+              );
+
+        return MainLayout(
+          currentIndex: -1, // Not a main navigation item
+          title: unreadCount > 0
+              ? 'Notifications ($unreadCount unread)'
+              : 'Notifications',
+          actions: [
+            if (unreadCount > 0)
+              TextButton(
+                onPressed: () => _markAllAsRead(notifications),
+                child: Text(
+                  'Mark all read',
+                  style: TextStyle(
+                    color: AppColors.primaryYellow,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
+            IconButton(
+              icon: const Icon(Icons.settings),
+              onPressed: _showNotificationSettings,
             ),
+          ],
+          child: content,
+        );
+      },
+      loading: () => MainLayout(
+        currentIndex: -1,
+        title: 'Notifications',
+        child: const Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, stack) => MainLayout(
+        currentIndex: -1,
+        title: 'Notifications',
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, color: Colors.red, size: 48),
+              const SizedBox(height: 16),
+              Text(
+                'Error loading notifications',
+                style: AppTextStyles.bodyLarge,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                error.toString(),
+                style: AppTextStyles.bodySmall.copyWith(color: Colors.red),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  ref.invalidate(notificationsProvider);
+                },
+                child: const Text('Retry'),
+              ),
+            ],
           ),
-        IconButton(
-          icon: const Icon(Icons.settings),
-          onPressed: _showNotificationSettings,
         ),
-      ],
-      child: content,
+      ),
     );
   }
 
-  Widget _buildNotificationItem(NotificationItem notification, int index) {
+  Widget _buildNotificationItem(AppNotification notification, int index) {
     return Container(
       margin: const EdgeInsets.only(bottom: AppSizes.spaceS),
       decoration: BoxDecoration(
@@ -132,21 +163,10 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
           child: const Icon(Icons.delete, color: AppColors.white),
         ),
         onDismissed: (direction) {
-          setState(() {
-            _notifications.removeAt(index);
-          });
+          // Note: For demo purposes, we'll just show a message
+          // In a real app, you'd want to delete from Supabase
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Notification deleted'),
-              action: SnackBarAction(
-                label: 'Undo',
-                onPressed: () {
-                  setState(() {
-                    _notifications.insert(index, notification);
-                  });
-                },
-              ),
-            ),
+            const SnackBar(content: Text('Notification would be deleted')),
           );
         },
         child: ListTile(
@@ -205,7 +225,7 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
               ),
               const SizedBox(height: 8),
               Text(
-                _formatTimestamp(notification.timestamp),
+                _formatTimestamp(notification.createdAt),
                 style: AppTextStyles.bodySmall.copyWith(
                   color: AppColors.textGray.withValues(alpha: 0.7),
                 ),
@@ -246,14 +266,12 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
 
   IconData _getNotificationIcon(NotificationType type) {
     switch (type) {
-      case NotificationType.sale:
+      case NotificationType.product:
         return Icons.sell;
       case NotificationType.message:
         return Icons.message;
-      case NotificationType.priceAlert:
-        return Icons.trending_down;
-      case NotificationType.interest:
-        return Icons.favorite;
+      case NotificationType.verification:
+        return Icons.verified;
       case NotificationType.system:
         return Icons.info;
     }
@@ -261,14 +279,12 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
 
   Color _getNotificationColor(NotificationType type) {
     switch (type) {
-      case NotificationType.sale:
+      case NotificationType.product:
         return AppColors.success;
       case NotificationType.message:
         return AppColors.primaryBlue;
-      case NotificationType.priceAlert:
+      case NotificationType.verification:
         return AppColors.primaryYellow;
-      case NotificationType.interest:
-        return AppColors.error;
       case NotificationType.system:
         return AppColors.textGray;
     }
@@ -291,11 +307,9 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
     }
   }
 
-  void _onNotificationTap(NotificationItem notification) {
+  void _onNotificationTap(AppNotification notification) {
     if (!notification.isRead) {
-      setState(() {
-        notification.isRead = true;
-      });
+      ref.read(notificationProvider.notifier).markAsRead(notification.id);
     }
 
     // Handle navigation based on notification type
@@ -306,17 +320,16 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
           context,
         ).showSnackBar(const SnackBar(content: Text('Opening chat...')));
         break;
-      case NotificationType.sale:
-      case NotificationType.interest:
+      case NotificationType.product:
         // Navigate to product or sales page
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Opening product details...')),
         );
         break;
-      case NotificationType.priceAlert:
-        // Navigate to product
+      case NotificationType.verification:
+        // Navigate to verification
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Opening product with new price...')),
+          const SnackBar(content: Text('Opening verification...')),
         );
         break;
       case NotificationType.system:
@@ -325,12 +338,15 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
     }
   }
 
-  void _markAllAsRead() {
-    setState(() {
-      for (var notification in _notifications) {
-        notification.isRead = true;
-      }
-    });
+  void _markAllAsRead(List<AppNotification> notifications) {
+    final unreadIds = notifications
+        .where((n) => !n.isRead)
+        .map((n) => n.id)
+        .toList();
+
+    for (final id in unreadIds) {
+      ref.read(notificationProvider.notifier).markAsRead(id);
+    }
   }
 
   void _showNotificationSettings() {
@@ -424,24 +440,3 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
     );
   }
 }
-
-// Models
-class NotificationItem {
-  final String id;
-  final String title;
-  final String message;
-  final NotificationType type;
-  final DateTime timestamp;
-  bool isRead;
-
-  NotificationItem({
-    required this.id,
-    required this.title,
-    required this.message,
-    required this.type,
-    required this.timestamp,
-    required this.isRead,
-  });
-}
-
-enum NotificationType { sale, message, priceAlert, interest, system }

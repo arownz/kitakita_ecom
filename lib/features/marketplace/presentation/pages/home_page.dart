@@ -29,7 +29,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   final TextEditingController _minPriceController = TextEditingController();
   final TextEditingController _maxPriceController = TextEditingController();
   String? _selectedCategoryId;
-  Set<String> _selectedConditions = {};
+  final Set<String> _selectedConditions = {};
 
   @override
   void initState() {
@@ -233,13 +233,6 @@ class _HomePageState extends ConsumerState<HomePage> {
             ),
           ),
       ],
-    );
-  }
-
-  void _showNotificationsDropdown(BuildContext context) {
-    // TODO: Implement notifications dropdown
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Notifications dropdown coming soon!')),
     );
   }
 

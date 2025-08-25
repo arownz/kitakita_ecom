@@ -11,11 +11,23 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
-    // Initialize Supabase using the template approach
-    await Supabase.initialize(url: supabaseUrl, anonKey: supabaseKey);
+    // Initialize Supabase with settings that skip email confirmation
+    await Supabase.initialize(
+      url: supabaseUrl,
+      anonKey: supabaseKey,
+      authOptions: const FlutterAuthClientOptions(
+        authFlowType: AuthFlowType.pkce,
+        // Don't redirect for email confirmation
+        detectSessionInUri: false,
+      ),
+    );
+
+    if (kDebugMode) {
+      print('✅ Supabase initialized successfully');
+    }
   } catch (e) {
     if (kDebugMode) {
-      print('Failed to initialize Supabase: $e');
+      print('❌ Failed to initialize Supabase: $e');
     }
     // Continue running the app even if Supabase initialization fails
   }

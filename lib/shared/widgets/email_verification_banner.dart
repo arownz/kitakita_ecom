@@ -34,144 +34,149 @@ class _EmailVerificationBannerState
       }
     }
 
-    // Check if user is actually verified by looking at the user's email confirmation
-    final isActuallyVerified = authState.user?.emailConfirmedAt != null;
+    // Check if user is actually verified by looking at the database verification status
+    final isActuallyVerified = authState.isEmailVerified;
 
-    // Don't show banner if user is not logged in, email is actually verified, or dismissed (and not permanent)
-    if (!isLoggedIn ||
-        isActuallyVerified ||
-        (_isDismissed && !widget.isPermanent)) {
+    // Always show banner for logged-in users with unverified email (unless dismissed on non-permanent)
+    if (!isLoggedIn || isActuallyVerified) {
       return const SizedBox.shrink();
     }
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSizes.paddingM),
-      decoration: BoxDecoration(
-        color: AppColors.primaryYellow,
-        border: Border(
-          bottom: BorderSide(
-            color: AppColors.primaryBlue.withValues(alpha: 0.2),
-            width: 1,
+    // If permanent banner (like profile page), always show regardless of dismissal
+    if (widget.isPermanent || !_isDismissed) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(AppSizes.paddingM),
+        decoration: BoxDecoration(
+          color: AppColors.primaryYellow,
+          border: Border(
+            bottom: BorderSide(
+              color: AppColors.primaryBlue.withValues(alpha: 0.2),
+              width: 1,
+            ),
           ),
         ),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryBlue.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Icon(
-                  Icons.email_outlined,
-                  color: AppColors.primaryBlue,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: AppSizes.spaceM),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Verify your email address',
-                      style: AppTextStyles.bodyLarge.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primaryBlue,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'To add products and use all features, please verify your email.',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.primaryBlue.withValues(alpha: 0.8),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Close button (only if not permanent)
-              if (!widget.isPermanent) ...[
-                const SizedBox(width: AppSizes.spaceS),
-                IconButton(
-                  onPressed: () {
-                    setState(() {
-                      _isDismissed = true;
-                    });
-                  },
-                  icon: const Icon(
-                    Icons.close,
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Icon(
+                    Icons.email_outlined,
                     color: AppColors.primaryBlue,
                     size: 20,
                   ),
-                  style: IconButton.styleFrom(
-                    padding: const EdgeInsets.all(4),
-                    minimumSize: const Size(24, 24),
-                    backgroundColor: AppColors.primaryBlue.withValues(
-                      alpha: 0.1,
+                ),
+                const SizedBox(width: AppSizes.spaceM),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Verify your email address',
+                        style: AppTextStyles.bodyLarge.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primaryBlue,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'To add products and use all features, please verify your email.',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.primaryBlue.withValues(alpha: 0.8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Close button (only if not permanent)
+                if (!widget.isPermanent) ...[
+                  const SizedBox(width: AppSizes.spaceS),
+                  IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _isDismissed = true;
+                      });
+                    },
+                    icon: const Icon(
+                      Icons.close,
+                      color: AppColors.primaryBlue,
+                      size: 20,
+                    ),
+                    style: IconButton.styleFrom(
+                      padding: const EdgeInsets.all(4),
+                      minimumSize: const Size(24, 24),
+                      backgroundColor: AppColors.primaryBlue.withValues(
+                        alpha: 0.1,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            const SizedBox(height: AppSizes.spaceM),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: authState.isLoading
+                        ? null
+                        : () => _resendVerificationEmail(context, ref),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primaryBlue,
+                      side: const BorderSide(color: AppColors.primaryBlue),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                    ),
+                    child: authState.isLoading
+                        ? const SizedBox(
+                            height: 16,
+                            width: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                AppColors.primaryBlue,
+                              ),
+                            ),
+                          )
+                        : Text(
+                            'Resend Email',
+                            style: AppTextStyles.bodySmall.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                  ),
+                ),
+                const SizedBox(width: AppSizes.spaceS),
+                TextButton(
+                  onPressed: () => _showVerificationInfo(context),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.primaryBlue.withValues(
+                      alpha: 0.7,
+                    ),
+                  ),
+                  child: Text(
+                    'Learn more',
+                    style: AppTextStyles.bodySmall.copyWith(
+                      decoration: TextDecoration.underline,
                     ),
                   ),
                 ),
               ],
-            ],
-          ),
-          const SizedBox(height: AppSizes.spaceM),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: authState.isLoading
-                      ? null
-                      : () => _resendVerificationEmail(context, ref),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.primaryBlue,
-                    side: const BorderSide(color: AppColors.primaryBlue),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                  ),
-                  child: authState.isLoading
-                      ? const SizedBox(
-                          height: 16,
-                          width: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              AppColors.primaryBlue,
-                            ),
-                          ),
-                        )
-                      : Text(
-                          'Resend Email',
-                          style: AppTextStyles.bodySmall.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                ),
-              ),
-              const SizedBox(width: AppSizes.spaceS),
-              TextButton(
-                onPressed: () => _showVerificationInfo(context),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.primaryBlue.withValues(alpha: 0.7),
-                ),
-                child: Text(
-                  'Learn more',
-                  style: AppTextStyles.bodySmall.copyWith(
-                    decoration: TextDecoration.underline,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
+            ),
+          ],
+        ),
+      );
+    }
+
+    return const SizedBox.shrink();
   }
 
   void _resendVerificationEmail(BuildContext context, WidgetRef ref) async {

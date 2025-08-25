@@ -10,6 +10,7 @@ import '../../features/marketplace/presentation/pages/home_page.dart';
 import '../../features/marketplace/presentation/pages/product_detail_page.dart';
 import '../../features/marketplace/presentation/pages/add_product_page.dart';
 import '../../features/notifications/presentation/pages/notifications_page.dart';
+import '../../features/chat/presentation/pages/chat_list_page.dart';
 import '../../features/chat/presentation/pages/chat_detail_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/profile/presentation/pages/my_products_page.dart';
@@ -63,6 +64,18 @@ class AppRouter {
           return null;
         }
 
+        // CRITICAL: If on auth pages, NEVER redirect away from them
+        if (currentLocation == AppRoutes.login ||
+            currentLocation == AppRoutes.register ||
+            currentLocation == AppRoutes.landing) {
+          if (kDebugMode) {
+            print(
+              '🚨 ON AUTH PAGE - NO REDIRECT ALLOWED - Current: $currentLocation',
+            );
+          }
+          return null; // Always stay on auth pages
+        }
+
         // CRITICAL: If there's an auth error, NEVER redirect anywhere
         if (hasError) {
           if (kDebugMode) {
@@ -71,23 +84,7 @@ class AppRouter {
             );
           }
           // Force stay on current page - this prevents GoRouter from going to /
-          return currentLocation;
-        }
-
-        // CRITICAL: If on login page, NEVER redirect to landing (regardless of error state)
-        if (currentLocation == AppRoutes.login) {
-          if (kDebugMode) {
-            print('🚨 ON LOGIN PAGE - NO REDIRECT TO LANDING ALLOWED');
-          }
-          return null; // Stay on login page
-        }
-
-        // CRITICAL: If on register page, NEVER redirect to landing (regardless of error state)
-        if (currentLocation == AppRoutes.register) {
-          if (kDebugMode) {
-            print('🚨 ON REGISTER PAGE - NO REDIRECT TO LANDING ALLOWED');
-          }
-          return null; // Stay on register page
+          return null;
         }
 
         // If logged in and on any auth page, redirect to appropriate home
@@ -132,17 +129,6 @@ class AppRouter {
             }
             return AppRoutes.landing;
           }
-        }
-
-        // CRITICAL: If on any auth page and not logged in, NEVER redirect
-        if (!isLoggedIn &&
-            (currentLocation == AppRoutes.login ||
-                currentLocation == AppRoutes.register ||
-                currentLocation == AppRoutes.landing)) {
-          if (kDebugMode) {
-            print('🚨 ON AUTH PAGE AND NOT LOGGED IN - NO REDIRECT ALLOWED');
-          }
-          return null; // Stay on current auth page
         }
 
         // Admin trying to access student routes
@@ -231,7 +217,7 @@ class AppRouter {
         GoRoute(
           path: AppRoutes.chatList,
           name: 'chatList',
-          builder: (context, state) => const ChatDetailPage(chatId: 'default'),
+          builder: (context, state) => const ChatListPage(),
         ),
         GoRoute(
           path: AppRoutes.chatDetail,

@@ -153,25 +153,42 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
 
                 // User avatar
                 if (currentUser != null) ...[
-                  GestureDetector(
-                    onTap: () => context.go(AppRoutes.profile),
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryBlue,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Center(
-                        child: Text(
-                          currentUser.email?.substring(0, 1).toUpperCase() ??
-                              'U',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
+                  MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: GestureDetector(
+                      onTap: () => context.go(AppRoutes.profile),
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryBlue,
+                          borderRadius: BorderRadius.circular(20),
                         ),
+                        child:
+                            currentUser.userMetadata?['profile_image_url'] !=
+                                null
+                            ? ClipOval(
+                                child: Image.network(
+                                  currentUser
+                                      .userMetadata!['profile_image_url'],
+                                  fit: BoxFit.cover,
+                                  width: 40,
+                                  height: 40,
+                                ),
+                              )
+                            : Center(
+                                child: Text(
+                                  currentUser.email
+                                          ?.substring(0, 1)
+                                          .toUpperCase() ??
+                                      'U',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
                       ),
                     ),
                   ),
@@ -246,23 +263,24 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
           // Sidebar toggle
           Container(
             height: 60,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Row(
               children: [
                 if (_isSidebarExpanded) ...[
                   const Expanded(
-                    child: Text(
-                      'Navigation',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF495057),
+                    child: Padding(
+                      padding: EdgeInsets.only(left: 8),
+                      child: Text(
+                        'Navigation',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF495057),
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                ] else ...[
-                  const SizedBox(width: 40), // Fixed width instead of Expanded
                 ],
                 IconButton(
                   icon: Icon(
@@ -284,50 +302,72 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
 
           // Navigation items
           Expanded(
-            child: ListView(
+            child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(vertical: 8),
-              children: [
-                _buildSidebarItem(
-                  icon: Icons.home_outlined,
-                  selectedIcon: Icons.home,
-                  label: 'Home',
-                  isSelected: widget.currentIndex == 0,
-                  onTap: () => context.go(AppRoutes.home),
-                ),
-                _buildSidebarItem(
-                  icon: Icons.add_box_outlined,
-                  selectedIcon: Icons.add_box,
-                  label: 'Sell Product',
-                  isSelected: widget.currentIndex == 1,
-                  onTap: () => context.go(AppRoutes.addProduct),
-                ),
-                _buildSidebarItem(
-                  icon: Icons.chat_bubble_outline,
-                  selectedIcon: Icons.chat_bubble,
-                  label: 'Messages',
-                  isSelected: widget.currentIndex == 2,
-                  onTap: () => context.go(AppRoutes.chatList),
-                ),
-                _buildSidebarItem(
-                  icon: Icons.favorite_outline,
-                  selectedIcon: Icons.favorite,
-                  label: 'Favorites',
-                  isSelected: widget.currentIndex == 3,
-                  onTap: () => context.go(AppRoutes.favorites),
-                ),
-                _buildSidebarItem(
-                  icon: Icons.person_outline,
-                  selectedIcon: Icons.person,
-                  label: 'Profile',
-                  isSelected: widget.currentIndex == 4,
-                  onTap: () => context.go(AppRoutes.profile),
-                ),
-              ],
+              child: Column(
+                children: [
+                  _buildSidebarItem(
+                    icon: Icons.home_outlined,
+                    selectedIcon: Icons.home,
+                    label: 'Home',
+                    isSelected: widget.currentIndex == 0,
+                    onTap: () => context.go(AppRoutes.home),
+                  ),
+                  _buildSidebarItem(
+                    icon: Icons.add_box_outlined,
+                    selectedIcon: Icons.add_box,
+                    label: 'Sell Product',
+                    isSelected: widget.currentIndex == 1,
+                    onTap: () => _handleVerifiedNavigation(
+                      context,
+                      AppRoutes.addProduct,
+                    ),
+                  ),
+                  _buildSidebarItem(
+                    icon: Icons.chat_bubble_outline,
+                    selectedIcon: Icons.chat_bubble,
+                    label: 'Messages',
+                    isSelected: widget.currentIndex == 2,
+                    onTap: () =>
+                        _handleVerifiedNavigation(context, AppRoutes.chatList),
+                  ),
+                  _buildSidebarItem(
+                    icon: Icons.favorite_outline,
+                    selectedIcon: Icons.favorite,
+                    label: 'Favorites',
+                    isSelected: widget.currentIndex == 3,
+                    onTap: () => context.go(AppRoutes.favorites),
+                  ),
+                  _buildSidebarItem(
+                    icon: Icons.person_outline,
+                    selectedIcon: Icons.person,
+                    label: 'Profile',
+                    isSelected: widget.currentIndex == 4,
+                    onTap: () => context.go(AppRoutes.profile),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
       ),
     );
+  }
+
+  void _handleVerifiedNavigation(BuildContext context, String route) {
+    final authState = ref.read(authProvider);
+    final isVerified = authState.isEmailVerified;
+
+    if (!isVerified) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please verify your email to access this feature.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+    context.go(route);
   }
 
   Widget _buildSidebarItem({
@@ -550,10 +590,10 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
         context.go(AppRoutes.home);
         break;
       case 1:
-        context.go(AppRoutes.addProduct);
+        _handleVerifiedNavigation(context, AppRoutes.addProduct);
         break;
       case 2:
-        context.go(AppRoutes.chatList);
+        _handleVerifiedNavigation(context, AppRoutes.chatList);
         break;
       case 3:
         context.go(AppRoutes.favorites);

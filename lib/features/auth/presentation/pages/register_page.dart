@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 import '../../../../shared/constants/app_colors.dart';
 import '../../../../shared/constants/app_text_styles.dart';
@@ -27,6 +29,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  XFile? _profileImage;
 
   @override
   void dispose() {
@@ -51,6 +54,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             firstName: _firstNameController.text.trim(),
             lastName: _lastNameController.text.trim(),
             phoneNumber: _phoneController.text.trim(),
+            profileImagePath: _profileImage?.path,
           );
 
       if (!mounted) return;
@@ -247,6 +251,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Image.asset(
+              width: 50,
+              height: 50,
               'assets/images/craiyon_190355_image.png',
               fit: BoxFit.contain,
             ),
@@ -304,6 +310,62 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Profile Image Picker
+            Center(
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: _pickProfileImage,
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.primaryBlue,
+                      border: Border.all(
+                        color: AppColors.primaryYellow,
+                        width: 3,
+                      ),
+                    ),
+                    child: _profileImage != null
+                        ? ClipOval(
+                            child: kIsWeb
+                                ? Image.network(
+                                    _profileImage!.path,
+                                    fit: BoxFit.cover,
+                                    width: 80,
+                                    height: 80,
+                                  )
+                                : Image.file(
+                                    File(_profileImage!.path),
+                                    fit: BoxFit.cover,
+                                    width: 80,
+                                    height: 80,
+                                  ),
+                          )
+                        : const Icon(
+                            Icons.add_a_photo,
+                            color: Colors.white,
+                            size: 32,
+                          ),
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            Center(
+              child: Text(
+                'Add Profile Photo',
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.primaryBlue,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
             // Student ID field
             _buildInputField(
               label: 'Student ID',
@@ -633,11 +695,11 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             child: GestureDetector(
               onTap: () => context.go(AppRoutes.login),
               child: Text(
-              'Sign In',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.primaryYellow,
-                fontWeight: FontWeight.w700,
-                decoration: TextDecoration.underline,
+                'Sign In',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.primaryYellow,
+                  fontWeight: FontWeight.w700,
+                  decoration: TextDecoration.underline,
                 ),
               ),
             ),
@@ -645,6 +707,33 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         ],
       ),
     );
+  }
+
+  Future<void> _pickProfileImage() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 80,
+      );
+
+      if (image != null) {
+        setState(() {
+          _profileImage = image;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to pick image: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
   }
 }
 

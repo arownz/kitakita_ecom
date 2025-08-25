@@ -4,21 +4,20 @@ import '../../../../shared/constants/app_colors.dart';
 import '../../../../shared/constants/app_text_styles.dart';
 import '../../../../shared/utils/responsive_utils.dart';
 import '../../../../shared/layouts/main_layout.dart';
-import '../../../../shared/widgets/verification_guard.dart';
 import '../providers/chat_providers.dart';
 import '../../domain/models/chat_models.dart';
 import '../../../../shared/providers/auth_provider.dart';
 
-class ChatDetailPage extends ConsumerStatefulWidget {
+class ChatDetailPageNew extends ConsumerStatefulWidget {
   final String chatId;
 
-  const ChatDetailPage({super.key, required this.chatId});
+  const ChatDetailPageNew({super.key, required this.chatId});
 
   @override
-  ConsumerState<ChatDetailPage> createState() => _ChatDetailPageState();
+  ConsumerState<ChatDetailPageNew> createState() => _ChatDetailPageNewState();
 }
 
-class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
+class _ChatDetailPageNewState extends ConsumerState<ChatDetailPageNew> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
@@ -55,18 +54,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
     }
   }
 
-  void _sendMessage() async {
-    // Check if email is verified before sending message
-    if (!await checkEmailVerificationAndPrompt(
-      context,
-      ref,
-      feature: 'Send Messages',
-      description:
-          'Email verification is required to send messages in chat. This helps maintain a secure marketplace environment.',
-    )) {
-      return;
-    }
-
+  void _sendMessage() {
     if (_messageController.text.trim().isNotEmpty) {
       final user = ref.read(currentUserProvider);
       if (user != null) {

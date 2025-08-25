@@ -57,8 +57,8 @@ class _AddProductPageState extends ConsumerState<AddProductPage> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
 
-    // Check if user is actually verified by looking at the user's email confirmation
-    final isActuallyVerified = authState.user?.emailConfirmedAt != null;
+    // Check if user is actually verified using database verification status
+    final isActuallyVerified = authState.isEmailVerified;
 
     // Check if user is verified
     if (!isActuallyVerified) {
