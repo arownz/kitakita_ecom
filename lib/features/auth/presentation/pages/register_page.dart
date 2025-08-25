@@ -54,7 +54,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             firstName: _firstNameController.text.trim(),
             lastName: _lastNameController.text.trim(),
             phoneNumber: _phoneController.text.trim(),
-            profileImagePath: _profileImage?.path,
+            profileImage: _profileImage,
           );
 
       if (!mounted) return;

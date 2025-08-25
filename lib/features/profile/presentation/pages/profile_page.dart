@@ -90,7 +90,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     }
 
     return MainLayout(
-      currentIndex: 2, // Profile tab index
+      currentIndex: 4, // Profile tab index (Home=0, Sell=1, Messages=2, Favorites=3, Profile=4)
       child: Scaffold(
         backgroundColor: AppColors.lightGray,
         appBar: AppBar(
@@ -469,7 +469,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           final filename =
               '${user.id}_${DateTime.now().millisecondsSinceEpoch}.jpg';
 
-          // For web platform, read as bytes
+          // Read bytes directly from XFile (works on all platforms)
           final bytes = await image.readAsBytes();
 
           final uploadResponse = await SupabaseService.storage
@@ -487,8 +487,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               'user_profiles',
             ).update({'profile_image_url': publicUrl}).eq('user_id', user.id);
 
-            // Refresh the page to show new image
-            setState(() {});
+            // Refresh the profile data to show new image
+            await _loadUserDataFromDatabase();
 
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(

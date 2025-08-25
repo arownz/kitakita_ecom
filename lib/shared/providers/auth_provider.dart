@@ -1,8 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:logger/logger.dart';
-import 'package:flutter/foundation.dart';
-import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import '../services/supabase_service.dart';
 
 final _logger = Logger();
@@ -151,14 +150,20 @@ class AuthNotifier extends StateNotifier<AuthState> {
       ).select('id').eq('user_id', user.id).maybeSingle();
 
       if (existing == null) {
+        // Helper function to convert empty strings to null
+        String? nullIfEmpty(String? value) {
+          if (value == null || value.trim().isEmpty) return null;
+          return value.trim();
+        }
+
         // Try to get data from user metadata (set during registration)
         final meta = user.userMetadata ?? <String, dynamic>{};
         final profileData = {
           'user_id': user.id,
-          'student_id': meta['student_id'] ?? '',
-          'first_name': meta['first_name'] ?? '',
-          'last_name': meta['last_name'] ?? '',
-          'phone_number': meta['phone_number'] ?? '',
+          'student_id': nullIfEmpty(meta['student_id'] as String?),
+          'first_name': nullIfEmpty(meta['first_name'] as String?),
+          'last_name': nullIfEmpty(meta['last_name'] as String?),
+          'phone_number': nullIfEmpty(meta['phone_number'] as String?),
           'email': user.email ?? meta['email'] ?? '',
           'role': 'student',
           'is_verified': false,
@@ -221,7 +226,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String firstName,
     required String lastName,
     required String phoneNumber,
-    String? profileImagePath,
+    XFile? profileImage,
   }) async {
     // Validate university email
     if (!_isUniversityEmail(email)) {
@@ -243,7 +248,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
         'last_name': lastName,
         'phone_number': phoneNumber,
         'email': email,
-        'profile_image_path': profileImagePath,
+        'profile_image_file':
+            profileImage, // Use different key name to avoid confusion
       };
 
       // Sign up user with basic data only
@@ -499,55 +505,41 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  // Safe profile update that handles RLS issues and uses direct table update
+  // Safe profile update that handles RLS issues and uses explicit INSERT/UPDATE
   Future<void> _updateUserProfileSafely(
     User user,
     Map<String, dynamic> registrationData,
   ) async {
+    String? profileImageUrl; // Declare outside try block for scope
+
+    // Helper function to convert empty strings to null
+    String? nullIfEmpty(String? value) {
+      if (value == null || value.trim().isEmpty) return null;
+      return value.trim();
+    }
+
     try {
       // Handle profile image upload if provided
-      String? profileImageUrl;
-      final profileImagePath =
-          registrationData['profile_image_path'] as String?;
+      final profileImage = registrationData['profile_image_file'] as XFile?;
 
-      if (profileImagePath != null) {
+      if (profileImage != null) {
         try {
-          _logger.i('Uploading profile image from path: $profileImagePath');
+          _logger.i('Uploading profile image from XFile: ${profileImage.name}');
           final fileName =
               'profile_${user.id}_${DateTime.now().millisecondsSinceEpoch}.jpg';
-          final filePath = 'profile-images/$fileName';
 
-          // Read file bytes (platform-aware)
-          late Uint8List fileBytes;
-          try {
-            if (kIsWeb) {
-              // On web, File() might not work the same way
-              // For now, we'll try the same approach but with better error handling
-              _logger.i('Web platform: attempting file read');
-              final bytes = await File(profileImagePath).readAsBytes();
-              fileBytes = Uint8List.fromList(bytes);
-            } else {
-              // Mobile/Desktop platforms
-              _logger.i('Mobile/Desktop platform: reading file');
-              final bytes = await File(profileImagePath).readAsBytes();
-              fileBytes = Uint8List.fromList(bytes);
-            }
-          } catch (e) {
-            _logger.w(
-              'Failed to read file: $e. Note: Web file handling may require different implementation.',
-            );
-            rethrow;
-          }
+          // Read file bytes directly from XFile (works on all platforms)
+          final fileBytes = await profileImage.readAsBytes();
 
           // Upload to Supabase Storage
           await SupabaseService.storage
               .from('profile-images')
-              .uploadBinary(filePath, fileBytes);
+              .uploadBinary(fileName, fileBytes);
 
           // Get public URL
           profileImageUrl = SupabaseService.storage
               .from('profile-images')
-              .getPublicUrl(filePath);
+              .getPublicUrl(fileName);
 
           _logger.i('✅ Profile image uploaded successfully: $profileImageUrl');
         } catch (imageError) {
@@ -556,48 +548,100 @@ class AuthNotifier extends StateNotifier<AuthState> {
         }
       }
 
-      // Update user_profiles table directly (the trigger should have created a basic row)
-      _logger.i('Updating profile using direct table update...');
+      // Use explicit INSERT or UPDATE pattern instead of upsert
+      _logger.i('Checking if profile exists for user: ${user.id}');
 
-      final updateData = {
-        'student_id': registrationData['student_id'] as String?,
-        'first_name': registrationData['first_name'] as String?,
-        'last_name': registrationData['last_name'] as String?,
-        'phone_number': registrationData['phone_number'] as String?,
-        'updated_at': DateTime.now().toIso8601String(),
-      };
-
-      // Only include profile image URL if we have one
-      if (profileImageUrl != null) {
-        updateData['profile_image_url'] = profileImageUrl;
-      }
-
-      await SupabaseService.from(
+      // Check if profile already exists
+      final existingProfile = await SupabaseService.from(
         'user_profiles',
-      ).update(updateData).eq('user_id', user.id);
+      ).select('id').eq('user_id', user.id).maybeSingle();
 
-      _logger.i('✅ Profile updated successfully via direct table update');
-    } catch (e) {
-      _logger.w('Profile update failed: $e');
-      // Try to create the profile row if it doesn't exist (fallback)
-      try {
-        _logger.i('Attempting to insert profile row as fallback...');
-        await SupabaseService.from('user_profiles').insert({
+      if (existingProfile != null) {
+        // Profile exists - UPDATE only
+        _logger.i('Profile exists, updating...');
+
+        final updateData = {
+          'student_id': nullIfEmpty(registrationData['student_id'] as String?),
+          'first_name': nullIfEmpty(registrationData['first_name'] as String?),
+          'last_name': nullIfEmpty(registrationData['last_name'] as String?),
+          'phone_number': nullIfEmpty(
+            registrationData['phone_number'] as String?,
+          ),
+          'updated_at': DateTime.now().toIso8601String(),
+        };
+
+        // Only include profile image URL if we have one
+        if (profileImageUrl != null) {
+          updateData['profile_image_url'] = profileImageUrl;
+        }
+
+        await SupabaseService.from(
+          'user_profiles',
+        ).update(updateData).eq('user_id', user.id);
+
+        _logger.i('✅ Profile updated successfully');
+      } else {
+        // Profile doesn't exist - INSERT
+        _logger.i('Profile does not exist, inserting...');
+
+        final insertData = {
           'user_id': user.id,
           'email': user.email,
-          'student_id': registrationData['student_id'] as String?,
-          'first_name': registrationData['first_name'] as String?,
-          'last_name': registrationData['last_name'] as String?,
-          'phone_number': registrationData['phone_number'] as String?,
+          'student_id': nullIfEmpty(registrationData['student_id'] as String?),
+          'first_name': nullIfEmpty(registrationData['first_name'] as String?),
+          'last_name': nullIfEmpty(registrationData['last_name'] as String?),
+          'phone_number': nullIfEmpty(
+            registrationData['phone_number'] as String?,
+          ),
           'role': 'student',
           'is_verified': false,
           'created_at': DateTime.now().toIso8601String(),
           'updated_at': DateTime.now().toIso8601String(),
-        });
-        _logger.i('✅ Profile row created successfully via fallback insert');
-      } catch (insertError) {
-        _logger.e('Failed to create profile row: $insertError');
+        };
+
+        // Only include profile image URL if we have one
+        if (profileImageUrl != null) {
+          insertData['profile_image_url'] = profileImageUrl;
+        }
+
+        await SupabaseService.from('user_profiles').insert(insertData);
+        _logger.i('✅ Profile inserted successfully');
+      }
+    } catch (e) {
+      _logger.e('Profile operation failed: $e');
+
+      // If primary method fails, try a direct UPDATE as final fallback
+      try {
+        _logger.i('Attempting direct UPDATE as fallback...');
+
+        final updateData = {
+          'student_id': nullIfEmpty(registrationData['student_id'] as String?),
+          'first_name': nullIfEmpty(registrationData['first_name'] as String?),
+          'last_name': nullIfEmpty(registrationData['last_name'] as String?),
+          'phone_number': nullIfEmpty(
+            registrationData['phone_number'] as String?,
+          ),
+          'updated_at': DateTime.now().toIso8601String(),
+        };
+
+        // Only include profile image URL if we have one
+        if (profileImageUrl != null) {
+          updateData['profile_image_url'] = profileImageUrl;
+        }
+
+        final response = await SupabaseService.from(
+          'user_profiles',
+        ).update(updateData).eq('user_id', user.id).select();
+
+        if (response.isNotEmpty) {
+          _logger.i('✅ Profile updated successfully via fallback UPDATE');
+        } else {
+          _logger.w('UPDATE affected 0 rows - profile may not exist');
+        }
+      } catch (updateError) {
+        _logger.e('Fallback UPDATE also failed: $updateError');
         // Don't throw - let the authentication continue
+        // User can complete profile later in the profile page
       }
     }
   }

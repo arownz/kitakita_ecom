@@ -6,6 +6,7 @@ import '../constants/app_colors.dart';
 import '../utils/responsive_utils.dart';
 import '../../core/router/app_router.dart';
 import '../providers/auth_provider.dart';
+import '../providers/profile_provider.dart';
 
 class MainLayout extends ConsumerStatefulWidget {
   final Widget child;
@@ -153,44 +154,61 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
 
                 // User avatar
                 if (currentUser != null) ...[
-                  MouseRegion(
-                    cursor: SystemMouseCursors.click,
-                    child: GestureDetector(
-                      onTap: () => context.go(AppRoutes.profile),
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryBlue,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child:
-                            currentUser.userMetadata?['profile_image_url'] !=
-                                null
-                            ? ClipOval(
-                                child: Image.network(
-                                  currentUser
-                                      .userMetadata!['profile_image_url'],
-                                  fit: BoxFit.cover,
-                                  width: 40,
-                                  height: 40,
-                                ),
-                              )
-                            : Center(
-                                child: Text(
-                                  currentUser.email
-                                          ?.substring(0, 1)
-                                          .toUpperCase() ??
-                                      'U',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
+                  Consumer(
+                    builder: (context, ref, child) {
+                      final profileImageUrl = ref.watch(
+                        profileImageUrlProvider,
+                      );
+                      final userInitials = ref.watch(userInitialsProvider);
+
+                      return MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: GestureDetector(
+                          onTap: () => context.go(AppRoutes.profile),
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryBlue,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child:
+                                profileImageUrl != null &&
+                                    profileImageUrl.isNotEmpty
+                                ? ClipOval(
+                                    child: Image.network(
+                                      profileImageUrl,
+                                      fit: BoxFit.cover,
+                                      width: 40,
+                                      height: 40,
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              Center(
+                                                child: Text(
+                                                  userInitials,
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                              ),
+                                    ),
+                                  )
+                                : Center(
+                                    child: Text(
+                                      userInitials,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ),
-                      ),
-                    ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ],
 
@@ -494,29 +512,57 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
 
         // User avatar or login
         if (currentUser != null) ...[
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: GestureDetector(
-              onTap: () => context.go(AppRoutes.profile),
-              child: Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: AppColors.primaryBlue,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Center(
-                  child: Text(
-                    currentUser.email?.substring(0, 1).toUpperCase() ?? 'U',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
+          Consumer(
+            builder: (context, ref, child) {
+              final profileImageUrl = ref.watch(profileImageUrlProvider);
+              final userInitials = ref.watch(userInitialsProvider);
+
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: GestureDetector(
+                  onTap: () => context.go(AppRoutes.profile),
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryBlue,
+                      borderRadius: BorderRadius.circular(16),
                     ),
+                    child: profileImageUrl != null && profileImageUrl.isNotEmpty
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: Image.network(
+                              profileImageUrl,
+                              fit: BoxFit.cover,
+                              width: 32,
+                              height: 32,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Center(
+                                    child: Text(
+                                      userInitials,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                            ),
+                          )
+                        : Center(
+                            child: Text(
+                              userInitials,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
                   ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
         ],
 
