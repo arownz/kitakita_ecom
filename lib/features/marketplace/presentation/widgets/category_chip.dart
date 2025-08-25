@@ -18,43 +18,46 @@ class CategoryChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => onTap?.call(category.id),
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.paddingM,
-          vertical: AppSizes.paddingS,
-        ),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryYellow : AppColors.white,
-          borderRadius: BorderRadius.circular(AppSizes.radiusRound),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.shadowColor,
-              blurRadius: 4,
-              offset: const Offset(0, 0),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (category.iconName != null) ...[
-              Icon(
-                _getIconData(category.iconName!),
-                size: 16,
-                color: isSelected ? AppColors.black : AppColors.primaryBlue,
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: () => onTap?.call(category.id),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSizes.paddingM,
+            vertical: AppSizes.paddingS,
+          ),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.primaryYellow : AppColors.white,
+            borderRadius: BorderRadius.circular(AppSizes.radiusRound),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.shadowColor,
+                blurRadius: 4,
+                offset: const Offset(0, 0),
               ),
-              const SizedBox(width: AppSizes.spaceXS),
             ],
-            Text(
-              category.name,
-              style: AppTextStyles.categoryText.copyWith(
-                color: isSelected ? AppColors.black : AppColors.primaryBlue,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (category.iconName != null) ...[
+                Icon(
+                  _getIconData(category.iconName!),
+                  size: 16,
+                  color: isSelected ? AppColors.black : AppColors.primaryBlue,
+                ),
+                const SizedBox(width: AppSizes.spaceXS),
+              ],
+              Text(
+                category.name,
+                style: AppTextStyles.categoryText.copyWith(
+                  color: isSelected ? AppColors.black : AppColors.primaryBlue,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

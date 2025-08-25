@@ -499,7 +499,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  // Safe profile update that handles RLS issues and uses database function
+  // Safe profile update that handles RLS issues and uses direct table update
   Future<void> _updateUserProfileSafely(
     User user,
     Map<String, dynamic> registrationData,
@@ -556,25 +556,49 @@ class AuthNotifier extends StateNotifier<AuthState> {
         }
       }
 
-      // Use the database function to safely update profile
-      _logger.i('Updating profile using database function...');
+      // Update user_profiles table directly (the trigger should have created a basic row)
+      _logger.i('Updating profile using direct table update...');
 
-      final result = await SupabaseService.client.rpc(
-        'update_user_profile',
-        params: {
-          'profile_user_id': user.id,
-          'profile_student_id': registrationData['student_id'] as String?,
-          'profile_first_name': registrationData['first_name'] as String?,
-          'profile_last_name': registrationData['last_name'] as String?,
-          'profile_phone_number': registrationData['phone_number'] as String?,
-          'profile_image_url': profileImageUrl,
-        },
-      );
+      final updateData = {
+        'student_id': registrationData['student_id'] as String?,
+        'first_name': registrationData['first_name'] as String?,
+        'last_name': registrationData['last_name'] as String?,
+        'phone_number': registrationData['phone_number'] as String?,
+        'updated_at': DateTime.now().toIso8601String(),
+      };
 
-      _logger.i('✅ Profile updated successfully: $result');
+      // Only include profile image URL if we have one
+      if (profileImageUrl != null) {
+        updateData['profile_image_url'] = profileImageUrl;
+      }
+
+      await SupabaseService.from(
+        'user_profiles',
+      ).update(updateData).eq('user_id', user.id);
+
+      _logger.i('✅ Profile updated successfully via direct table update');
     } catch (e) {
       _logger.w('Profile update failed: $e');
-      // Don't throw - let the authentication continue
+      // Try to create the profile row if it doesn't exist (fallback)
+      try {
+        _logger.i('Attempting to insert profile row as fallback...');
+        await SupabaseService.from('user_profiles').insert({
+          'user_id': user.id,
+          'email': user.email,
+          'student_id': registrationData['student_id'] as String?,
+          'first_name': registrationData['first_name'] as String?,
+          'last_name': registrationData['last_name'] as String?,
+          'phone_number': registrationData['phone_number'] as String?,
+          'role': 'student',
+          'is_verified': false,
+          'created_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toIso8601String(),
+        });
+        _logger.i('✅ Profile row created successfully via fallback insert');
+      } catch (insertError) {
+        _logger.e('Failed to create profile row: $insertError');
+        // Don't throw - let the authentication continue
+      }
     }
   }
 
