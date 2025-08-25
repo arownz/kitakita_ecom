@@ -67,7 +67,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           _isLoading = false;
         });
       } catch (e) {
-        print('Error loading profile data: $e');
+        if (kDebugMode) {
+          print('Error loading profile data: $e');
+        }
         setState(() {
           _isLoading = false;
         });
