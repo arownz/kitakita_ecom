@@ -4,7 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/app.dart';
 import 'package:flutter/foundation.dart';
 
-const supabaseUrl = 'https://plnbvoltpxqgxhckquwd.supabase.co';
+const supabaseUrl = 'https://irfkajxfonujbjxzveka.supabase.co';
 const supabaseKey = String.fromEnvironment('SUPABASE_KEY');
 
 void main() async {

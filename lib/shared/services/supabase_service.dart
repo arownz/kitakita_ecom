@@ -2,7 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
 
 class SupabaseService {
-  static const String supabaseUrl = 'https://plnbvoltpxqgxhckquwd.supabase.co';
+  static const String supabaseUrl = 'https://irfkajxfonujbjxzveka.supabase.co';
   static const String supabaseAnonKey = String.fromEnvironment('SUPABASE_KEY');
 
   static SupabaseClient get client => Supabase.instance.client;
@@ -29,7 +29,7 @@ class SupabaseService {
       data: userData,
       // Enable email confirmation - we want users to verify their emails
       emailRedirectTo:
-          'https://plnbvoltpxqgxhckquwd.supabase.co/auth/v1/verify',
+          'https://irfkajxfonujbjxzveka.supabase.co/auth/v1/verify',
     );
   }
 

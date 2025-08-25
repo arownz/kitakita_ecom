@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:logger/logger.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:io';
-import 'dart:typed_data';
 import '../services/supabase_service.dart';
 
 final _logger = Logger();
@@ -517,15 +517,24 @@ class AuthNotifier extends StateNotifier<AuthState> {
               'profile_${user.id}_${DateTime.now().millisecondsSinceEpoch}.jpg';
           final filePath = 'profile-images/$fileName';
 
-          // Read file bytes (works for both mobile and web)
+          // Read file bytes (platform-aware)
           late Uint8List fileBytes;
           try {
-            final bytes = await File(profileImagePath).readAsBytes();
-            fileBytes = Uint8List.fromList(bytes);
+            if (kIsWeb) {
+              // On web, File() might not work the same way
+              // For now, we'll try the same approach but with better error handling
+              _logger.i('Web platform: attempting file read');
+              final bytes = await File(profileImagePath).readAsBytes();
+              fileBytes = Uint8List.fromList(bytes);
+            } else {
+              // Mobile/Desktop platforms
+              _logger.i('Mobile/Desktop platform: reading file');
+              final bytes = await File(profileImagePath).readAsBytes();
+              fileBytes = Uint8List.fromList(bytes);
+            }
           } catch (e) {
-            // On web, might need different handling
             _logger.w(
-              'Failed to read file as File object, trying alternative method: $e',
+              'Failed to read file: $e. Note: Web file handling may require different implementation.',
             );
             rethrow;
           }

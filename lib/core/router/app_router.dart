@@ -52,59 +52,48 @@ class AppRouter {
 
         if (kDebugMode) {
           print(
-            '🔍 Router redirect: isLoggedIn=$isLoggedIn, role=$userRole, location=$currentLocation, hasError=$hasError, isLoading=$isLoading',
+            '[ROUTER] Redirect check: isLoggedIn=$isLoggedIn, role=$userRole, location=$currentLocation, hasError=$hasError, isLoading=$isLoading',
           );
         }
 
         // Don't redirect if auth is loading
         if (isLoading) {
           if (kDebugMode) {
-            print('⏳ Auth is loading, no redirect');
+            print('[AUTH] Loading, no redirect');
           }
           return null;
         }
 
-        // CRITICAL: If on auth pages, NEVER redirect away from them
+        // CRITICAL: If on auth pages, allow navigation away if user is logged in
         if (currentLocation == AppRoutes.login ||
             currentLocation == AppRoutes.register ||
             currentLocation == AppRoutes.landing) {
-          if (kDebugMode) {
-            print(
-              '🚨 ON AUTH PAGE - NO REDIRECT ALLOWED - Current: $currentLocation',
-            );
-          }
-          return null; // Always stay on auth pages
-        }
-
-        // CRITICAL: If there's an auth error, NEVER redirect anywhere
-        if (hasError) {
-          if (kDebugMode) {
-            print(
-              '🚨 AUTH ERROR DETECTED - NO REDIRECT ALLOWED - Error: ${authState.error}',
-            );
-          }
-          // Force stay on current page - this prevents GoRouter from going to /
-          return null;
-        }
-
-        // If logged in and on any auth page, redirect to appropriate home
-        if (isLoggedIn) {
-          if (currentLocation == AppRoutes.login ||
-              currentLocation == AppRoutes.register ||
-              currentLocation == AppRoutes.landing) {
+          if (isLoggedIn) {
+            // User is logged in, allow navigation to home
             if (userRole == UserRole.admin) {
               if (kDebugMode) {
-                print('👑 Admin logged in, redirecting to admin dashboard');
+                print(
+                  '[ADMIN] Admin logged in, redirecting to admin dashboard',
+                );
               }
               return AppRoutes.adminDashboard;
             } else {
               if (kDebugMode) {
-                print('👨‍🎓 Student logged in, redirecting to home');
+                print('[STUDENT] Student logged in, redirecting to home');
               }
               return AppRoutes.home;
             }
+          } else {
+            if (kDebugMode) {
+              print(
+                '[AUTH] ON AUTH PAGE - NO REDIRECT ALLOWED - Current: $currentLocation',
+              );
+            }
+            return null; // Stay on auth pages if not logged in
           }
         }
+
+        // REMOVED: Auth error blocking - allow navigation regardless of errors
 
         // If not logged in and trying to access protected routes
         if (!isLoggedIn) {
@@ -125,7 +114,7 @@ class AppRouter {
             (route) => currentLocation.startsWith(route.split(':')[0]),
           )) {
             if (kDebugMode) {
-              print('🔒 Not logged in, redirecting to landing');
+              print('[AUTH] Not logged in, redirecting to landing');
             }
             return AppRoutes.landing;
           }
@@ -148,7 +137,7 @@ class AppRouter {
           )) {
             if (kDebugMode) {
               print(
-                '👑 Admin trying to access student route, redirecting to admin dashboard',
+                '[ADMIN] Admin trying to access student route, redirecting to admin dashboard',
               );
             }
             return AppRoutes.adminDashboard;
@@ -160,7 +149,7 @@ class AppRouter {
           if (currentLocation.startsWith('/admin')) {
             if (kDebugMode) {
               print(
-                '👨‍🎓 Student trying to access admin route, redirecting to home',
+                '[STUDENT] Student trying to access admin route, redirecting to home',
               );
             }
             return AppRoutes.home;
@@ -168,7 +157,7 @@ class AppRouter {
         }
 
         if (kDebugMode) {
-          print('✅ No redirect needed');
+          print('[ROUTER] No redirect needed');
         }
         return null; // No redirect needed
       },
@@ -286,7 +275,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
   if (kDebugMode) {
     print(
-      '🔄 Router provider rebuilding: user=${authState.user?.email}, role=${authState.userRole}, hasError=${authState.error != null}',
+      '[ROUTER] Provider rebuilding: user=${authState.user?.email}, role=${authState.userRole}, hasError=${authState.error != null}',
     );
   }
 
