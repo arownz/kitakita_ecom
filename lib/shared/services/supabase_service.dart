@@ -3,7 +3,8 @@ import 'package:flutter/foundation.dart';
 
 class SupabaseService {
   static const String supabaseUrl = 'https://irfkajxfonujbjxzveka.supabase.co';
-  static const String supabaseAnonKey = String.fromEnvironment('SUPABASE_KEY');
+  // This will be initialized from main.dart, so we don't need to define the key here
+  static const String supabaseAnonKey = ''; // Not used - key set in main.dart
 
   static SupabaseClient get client => Supabase.instance.client;
 

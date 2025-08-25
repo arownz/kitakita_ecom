@@ -3,14 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/app.dart';
 import 'package:flutter/foundation.dart';
-
-const supabaseUrl = 'https://irfkajxfonujbjxzveka.supabase.co';
-const supabaseKey = String.fromEnvironment('SUPABASE_KEY');
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
+    // Load environment variables
+    await dotenv.load(fileName: ".env");
+
+    const supabaseUrl = 'https://irfkajxfonujbjxzveka.supabase.co';
+    final supabaseKey = dotenv.env['SUPABASE_KEY']!;
+
     // Initialize Supabase with settings that skip email confirmation
     await Supabase.initialize(
       url: supabaseUrl,

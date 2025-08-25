@@ -235,14 +235,14 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       children: [
         // Logo
         Container(
-          width: 100,
-          height: 100,
+          width: 120,
+          height: 120,
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(25),
+            borderRadius: BorderRadius.circular(30),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 30,
                 offset: const Offset(0, 15),
               ),
@@ -251,9 +251,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Image.asset(
-              width: 50,
-              height: 50,
-              'assets/images/craiyon_190355_image.png',
+              'assets/images/ecomlogo.png',
               fit: BoxFit.contain,
             ),
           ),
