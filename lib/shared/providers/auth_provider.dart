@@ -746,8 +746,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await SupabaseService.client.auth.resend(
         type: OtpType.signup,
         email: user.email!,
-        emailRedirectTo:
-            'https://plnbvoltpxqgxhckquwd.supabase.co/auth/v1/verify',
+        // Don't provide emailRedirectTo to use Supabase's default email template
+        emailRedirectTo: null,
       );
 
       _logger.i('Verification email sent successfully');

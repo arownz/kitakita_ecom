@@ -10,7 +10,7 @@
                 "-d",
                 "chrome",
                 "--web-port=3000",
-                "--dart-define=SUPABASE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsbmJ2b2x0cHhxZ3hoY2txdXdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwMDg5NDMsImV4cCI6MjA3MTU4NDk0M30.K17_vkfIxSjuSfURnnz4Bxy7UZ4GHB-ZB5JU9bkwmOw"
+                "--dart-define=SUPABASE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlyZmthanhmb251amJqeHp2ZWthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwODYyMjUsImV4cCI6MjA3MTY2MjIyNX0.KEQIqlB9YZQgCQUtDSq4tezPuzes8lLT1FFvacVz37o"
             ]
         },
         {
